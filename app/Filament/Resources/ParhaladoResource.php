@@ -1,0 +1,122 @@
+<?php
+
+namespace App\Filament\Resources;
+
+use App\Filament\Resources\ParhaladoResource\Pages;
+use App\Models\Parhalado;
+use Filament\Forms;
+use Filament\Forms\Form;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Table;
+
+class ParhaladoResource extends Resource
+{
+    protected static ?string $model = Parhalado::class;
+
+    protected static ?string $navigationIcon = 'heroicon-o-users';
+    protected static ?string $navigationLabel = 'Pelayan & Pengurus';
+
+    public static function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                Forms\Components\TextInput::make('nama')
+                    ->required()
+                    ->maxLength(255),
+
+                Forms\Components\FileUpload::make('foto')
+                    ->image()
+                    ->directory('pelayan-photos')
+                    ->columnSpanFull(),
+                
+                Forms\Components\Select::make('kategori')
+                    ->options([
+                        'Pendeta' => 'Pendeta',
+                        'Parhalado' => 'Parhalado',
+                        'Kategorial' => 'Pengurus Kategorial',
+                    ])
+                    ->required()
+                    ->native(false),
+
+                Forms\Components\TextInput::make('jabatan')
+                    ->required()
+                    ->maxLength(255)
+                    ->placeholder('Cth: Pimpinan Jemaat / Sintua Wijk 1 / Ketua Naposobulung'),
+
+                Forms\Components\TextInput::make('bidang')
+                    ->datalist([
+                        'Dewan Koinonia', 'Dewan Marturia', 'Dewan Diakonia', 'Parartaon',
+                        'Sekolah Minggu', 'Remaja & Naposobulung', 'Parompuan', 'Ama', 'Lansia'
+                    ])
+                    ->placeholder('Contoh: Dewan Koinonia atau Sekolah Minggu')
+                    ->maxLength(255),
+                    
+                Forms\Components\TextInput::make('keterangan')
+                    ->maxLength(255)
+                    ->placeholder('Cth: Sektor 1 / Aktif'),
+
+                Forms\Components\TextInput::make('telepon')
+                    ->tel()
+                    ->maxLength(255)
+                    ->placeholder('Cth: 08123456789 (Opsional)'),
+            ]);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return $table
+            ->columns([
+                Tables\Columns\TextColumn::make('nama')
+                    ->searchable()
+                    ->weight('bold'),
+    
+                Tables\Columns\TextColumn::make('kategori')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'Pendeta' => 'warning',
+                        'Parhalado' => 'success',
+                        'Kategorial' => 'info',
+                        default => 'gray',
+                    })
+                    ->searchable(),
+                    
+                Tables\Columns\TextColumn::make('jabatan')
+                    ->searchable(),
+                    
+                Tables\Columns\TextColumn::make('keterangan')
+                    ->searchable(),
+            ])
+            ->filters([
+                Tables\Filters\SelectFilter::make('kategori')
+                    ->options([
+                        'Pendeta' => 'Pendeta',
+                        'Parhalado' => 'Parhalado',
+                        'Kategorial' => 'Pengurus Kategorial',
+                    ]),
+            ])
+            ->actions([
+                Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
+            ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [];
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\ListParhalados::route('/'),
+            'create' => Pages\CreateParhalado::route('/create'),
+            'edit' => Pages\EditParhalado::route('/{record}/edit'),
+        ];
+    }
+}
