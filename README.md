@@ -112,6 +112,7 @@ di mesin yang mbstring-nya sehat.
 | `app/Http/Requests/StorePenggunaanGerejaRequest.php` | Validasi permohonan gedung, termasuk pemeriksaan bentrok jadwal. |
 | `resources/views/components/` | `layout`, `page-hero`, `section-heading`, `empty-state`, `field`, `kartu-pelayan`, `filter-tahun`. |
 | `app/Policies/PengurusPolicy.php` | Dasar perizinan seluruh modul panel. Tiap modul hanya menyebut peran penanggung jawabnya. |
+| `presentasi.cmd` / `buka-admin.cmd` | Menyalakan seluruh situs, dan membuka halaman admin. Logikanya di `presentasi.ps1` dan `buka-admin.ps1`. |
 | `app/Models/User.php` | `canAccessPanel()` adalah gerbang akses `/admin`. Filament menolak 403 semua orang bila metode ini hilang dan `APP_ENV` bukan `local`. |
 | `app/Support/CacheKonten.php` | Cache isi halaman publik, dibatalkan lewat nomor versi. |
 | `app/Models/Concerns/` | `MenyegarkanCacheKonten` (batalkan cache saat data berubah) dan `MembersihkanBerkas` (hapus berkas unggahan yang jadi yatim). |
@@ -274,18 +275,77 @@ Blade **memotong argumen array multi-baris yang bersarang** pada direktif sepert
 
 ---
 
-## Menunjukkan situs ke orang lain (presentasi)
+## Menyalakan website (langkah demi langkah)
 
-Klik dua kali `presentasi.cmd` di akar proyek (`hkbp-volker/`). Ia menyalakan MySQL, membangun
-aset, menjalankan server, lalu membuka Cloudflare Tunnel dan mencetak URL
-`https://....trycloudflare.com` yang bisa dibuka siapa pun.
+### Cara cepat: satu klik
 
-Tiga hal yang perlu diingat:
+Klik dua kali **`presentasi.cmd`** di akar proyek (`hkbp-volker/`). Ia
+mengerjakan keempat langkah di bawah secara berurutan, lalu membuka browser
+sendiri ke halaman depan **dan** halaman admin.
 
-- **Jendelanya harus tetap terbuka.** Menutupnya mematikan tunnel dan URL-nya
-  langsung mati.
-- **URL berganti setiap kali dijalankan ulang.** Jangan dicetak di undangan.
+```
+[1/4] MySQL                  -> dinyalakan bila belum
+[2/4] Membangun aset         -> npm run build
+[3/4] Server Laravel         -> port 8000
+[4/4] Cloudflare Tunnel      -> alamat https publik
+```
+
+Alamat publiknya baru diumumkan **setelah dibuktikan bisa dibuka**. Kalau
+Cloudflare gagal menerbitkannya (kadang terjadi pada tunnel gratis), skripnya
+mengatakan begitu dan menyuruh Anda mengulang — bukan menyerahkan alamat mati
+yang baru ketahuan rusak di depan hadirin.
+
+Menutup jendela itu mematikan server dan tunnel sekaligus.
+
+### Cara manual: empat langkah
+
+Kalau ingin menjalankan sendiri, atau salah satu langkah gagal:
+
+| # | Langkah | Perintah | Cara tahu berhasil |
+|---|---|---|---|
+| 1 | Nyalakan MySQL | klik `start-mysql.cmd` (di folder induk) | tertulis `MySQL siap di 127.0.0.1:3306` |
+| 2 | Bangun aset | `npm run build` | muncul daftar berkas di `public/build` |
+| 3 | Nyalakan server | `php artisan serve` | tertulis `Server running on http://127.0.0.1:8000` |
+| 4 | Buka ke internet | `cloudflared tunnel --url http://127.0.0.1:8000` | muncul `https://....trycloudflare.com` |
+
+Langkah 4 boleh dilewati kalau cukup dibuka di komputer sendiri.
+
+**Langkah 2 sering terlupa.** Berkas di `public/build` dinamai menurut isinya,
+dan halaman menunjuk nama hasil build terakhir. Tanpa `npm run build`,
+perubahan tampilan tidak muncul sama sekali.
+
+### Membuka halaman admin
+
+Klik dua kali **`buka-admin.cmd`**. Ia memakai alamat publik yang sedang aktif
+bila `presentasi.cmd` berjalan, dan jatuh ke `http://127.0.0.1:8000/admin` bila
+tidak — menyalakan server lebih dulu kalau perlu.
+
+Alamat publik yang sedang aktif disimpan di `storage/app/alamat-publik.txt`, dan
+dihapus lagi saat `presentasi.cmd` ditutup, supaya `buka-admin.cmd` tidak pernah
+menawarkan alamat yang sudah mati.
+
+### ⚠️ Sebelum membagikan alamatnya
+
+Tunnel membuat **seluruh situs** bisa dijangkau siapa pun yang punya alamatnya,
+termasuk `/admin`. `robots.txt` menutupnya dari mesin pencari, tetapi tidak dari
+manusia yang menebak.
+
+Jadi **ganti kata sandi admin dulu** kalau masih memakai bawaan seeder
+(`admin@hkbpvolker.test` / `password`):
+
+```bash
+php artisan hkbp:akun admin@hkbpvolker.test
+```
+
+### Yang perlu diingat soal alamat tunnel
+
+- **Jendela `presentasi.cmd` harus tetap terbuka.** Menutupnya mematikan alamatnya.
+- **Alamatnya berganti setiap kali dijalankan ulang.** Jangan dicetak di undangan
+  atau slide; sebutkan lisan, atau buat QR code sesaat sebelum mulai.
 - Laptop harus menyala dan terhubung internet selama presentasi.
+- Cloudflare membatasi pembuatan tunnel gratis bila dibuat berkali-kali dalam
+  waktu singkat. Bila beberapa percobaan berturut-turut gagal, tunggu beberapa
+  menit sebelum mencoba lagi.
 
 Untuk alamat permanen yang hidup walau laptop mati, situs ini perlu dideploy ke
 hosting sungguhan (cPanel, Railway, atau VPS).
