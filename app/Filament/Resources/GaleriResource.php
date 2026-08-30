@@ -3,32 +3,56 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\GaleriResource\Pages;
-use App\Filament\Resources\GaleriResource\RelationManagers;
 use App\Models\Galeri;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class GaleriResource extends Resource
 {
     protected static ?string $model = Galeri::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-photo';
+
+    protected static ?string $navigationGroup = 'Dokumentasi';
+
+    protected static ?string $navigationLabel = 'Galeri Kegiatan';
+
+    protected static ?string $modelLabel = 'Foto Galeri';
+
+    protected static ?string $pluralModelLabel = 'Galeri Kegiatan';
+
+    protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
                 Forms\Components\TextInput::make('judul')
-                    ->required(),
+                    ->required()
+                    ->maxLength(255)
+                    ->placeholder('Cth: Perayaan Paskah & Perjamuan Kudus'),
+
                 Forms\Components\DatePicker::make('tanggal')
-                    ->required(),
-                Forms\Components\TextInput::make('foto')
-                    ->required(),
+                    ->label('Tanggal Kegiatan')
+                    ->required()
+                    ->native(false)
+                    ->default(now()),
+
+                Forms\Components\FileUpload::make('foto')
+                    ->image()
+                    ->disk('public')
+                    ->directory('galeri-photos')
+                    ->imageEditor()
+                    ->imageResizeMode('cover')
+                    ->imageResizeTargetWidth(1600)
+                    ->imageResizeTargetHeight(1067)
+                    ->maxSize(4096)
+                    ->required()
+                    ->helperText('Maksimal 4 MB. Foto otomatis diperkecil ke lebar 1600 piksel.')
+                    ->columnSpanFull(),
             ]);
     }
 
@@ -36,40 +60,36 @@ class GaleriResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\ImageColumn::make('foto')
+                    ->label('')
+                    ->disk('public')
+                    ->height(56),
+
                 Tables\Columns\TextColumn::make('judul')
+                    ->weight('bold')
+                    ->wrap()
                     ->searchable(),
+
                 Tables\Columns\TextColumn::make('tanggal')
-                    ->date()
+                    ->date('d F Y')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('foto')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->filters([
-                //
-            ])
+            ->defaultSort('tanggal', 'desc')
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->emptyStateHeading('Belum ada foto galeri');
     }
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array

@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\WartaJemaatResource\Pages;
 
 use App\Filament\Resources\WartaJemaatResource;
-use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateWartaJemaat extends CreateRecord

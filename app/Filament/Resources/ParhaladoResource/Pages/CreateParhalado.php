@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\ParhaladoResource\Pages;
 
 use App\Filament\Resources\ParhaladoResource;
-use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateParhalado extends CreateRecord

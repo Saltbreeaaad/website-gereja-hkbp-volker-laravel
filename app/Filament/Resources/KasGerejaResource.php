@@ -7,16 +7,26 @@ use App\Models\KasGereja;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Support\RawJs;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Support\RawJs;
+use Illuminate\Database\Eloquent\Builder;
 
 class KasGerejaResource extends Resource
 {
     protected static ?string $model = KasGereja::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
+
+    protected static ?string $navigationGroup = 'Administrasi';
+
     protected static ?string $navigationLabel = 'Kas Gereja';
+
+    protected static ?string $modelLabel = 'Transaksi Kas';
+
+    protected static ?string $pluralModelLabel = 'Kas Gereja';
+
+    protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form
     {
@@ -25,7 +35,7 @@ class KasGerejaResource extends Resource
                 Forms\Components\DatePicker::make('tanggal')
                     ->required()
                     ->default(now()),
-                
+
                 Forms\Components\Select::make('jenis')
                     ->options([
                         'Pemasukan' => 'Pemasukan',
@@ -33,18 +43,21 @@ class KasGerejaResource extends Resource
                     ])
                     ->required()
                     ->native(false),
-                
+
                 Forms\Components\TextInput::make('keterangan')
                     ->required()
                     ->maxLength(255)
                     ->placeholder('Cth: Persembahan Kantong I'),
-                
+
                 Forms\Components\TextInput::make('nominal')
                     ->required()
                     ->prefix('Rp')
                     ->mask(RawJs::make('$money($input, \',\', \'.\', 0)'))
                     ->stripCharacters('.')
-                    ->numeric(),
+                    ->numeric()
+                    ->minValue(1)
+                    ->rules(['integer', 'min:1'])
+                    ->helperText('Masukkan angka positif. Jenis transaksi menentukan pemasukan atau pengeluaran.'),
             ]);
     }
 
@@ -55,7 +68,7 @@ class KasGerejaResource extends Resource
                 Tables\Columns\TextColumn::make('tanggal')
                     ->date('d F Y')
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('jenis')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
@@ -63,16 +76,42 @@ class KasGerejaResource extends Resource
                         'Pengeluaran' => 'danger',
                     })
                     ->searchable(),
-                
+
                 Tables\Columns\TextColumn::make('keterangan')
                     ->searchable(),
-                
+
                 Tables\Columns\TextColumn::make('nominal')
                     ->money('IDR', locale: 'id')
-                    ->sortable(),
+                    ->sortable()
+                    ->summarize(
+                        Tables\Columns\Summarizers\Sum::make()
+                            ->label('Total')
+                            ->money('IDR', locale: 'id')
+                    ),
             ])
+            ->defaultSort('tanggal', 'desc')
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('jenis')
+                    ->options([
+                        'Pemasukan' => 'Pemasukan',
+                        'Pengeluaran' => 'Pengeluaran',
+                    ]),
+
+                Tables\Filters\Filter::make('periode')
+                    ->form([
+                        Forms\Components\DatePicker::make('dari')->native(false),
+                        Forms\Components\DatePicker::make('sampai')->native(false),
+                    ])
+                    ->query(fn (Builder $query, array $data): Builder => $query
+                        ->when($data['dari'] ?? null, fn (Builder $q, $tgl) => $q->whereDate('tanggal', '>=', $tgl))
+                        ->when($data['sampai'] ?? null, fn (Builder $q, $tgl) => $q->whereDate('tanggal', '<=', $tgl)))
+                    ->indicateUsing(function (array $data): ?string {
+                        if (blank($data['dari'] ?? null) && blank($data['sampai'] ?? null)) {
+                            return null;
+                        }
+
+                        return 'Periode: '.($data['dari'] ?? 'awal').' s/d '.($data['sampai'] ?? 'kini');
+                    }),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

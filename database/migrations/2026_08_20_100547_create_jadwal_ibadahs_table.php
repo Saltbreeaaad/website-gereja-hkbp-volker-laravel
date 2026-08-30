@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('jadwal_ibadahs', function (Blueprint $table) {
             $table->id();
             $table->string('nama_ibadah');
-            $table->date('tanggal'); 
+            $table->date('tanggal');
             $table->time('waktu');
             $table->string('pelayan_firman')->nullable();
             $table->text('keterangan')->nullable();

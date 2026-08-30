@@ -15,7 +15,16 @@ class ParhaladoResource extends Resource
     protected static ?string $model = Parhalado::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
+
+    protected static ?string $navigationGroup = 'Jemaat';
+
     protected static ?string $navigationLabel = 'Pelayan & Pengurus';
+
+    protected static ?string $modelLabel = 'Pelayan';
+
+    protected static ?string $pluralModelLabel = 'Pelayan & Pengurus';
+
+    protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form
     {
@@ -27,9 +36,16 @@ class ParhaladoResource extends Resource
 
                 Forms\Components\FileUpload::make('foto')
                     ->image()
+                    ->disk('public')
                     ->directory('pelayan-photos')
+                    ->imageEditor()
+                    ->imageResizeMode('cover')
+                    ->imageResizeTargetWidth(800)
+                    ->imageResizeTargetHeight(1000)
+                    ->maxSize(2048)
+                    ->helperText('Maksimal 2 MB. Foto potret paling rapi (rasio 4:5).')
                     ->columnSpanFull(),
-                
+
                 Forms\Components\Select::make('kategori')
                     ->options([
                         'Pendeta' => 'Pendeta',
@@ -47,11 +63,11 @@ class ParhaladoResource extends Resource
                 Forms\Components\TextInput::make('bidang')
                     ->datalist([
                         'Dewan Koinonia', 'Dewan Marturia', 'Dewan Diakonia', 'Parartaon',
-                        'Sekolah Minggu', 'Remaja & Naposobulung', 'Parompuan', 'Ama', 'Lansia'
+                        'Sekolah Minggu', 'Remaja & Naposobulung', 'Parompuan', 'Ama', 'Lansia',
                     ])
                     ->placeholder('Contoh: Dewan Koinonia atau Sekolah Minggu')
                     ->maxLength(255),
-                    
+
                 Forms\Components\TextInput::make('keterangan')
                     ->maxLength(255)
                     ->placeholder('Cth: Sektor 1 / Aktif'),
@@ -67,10 +83,15 @@ class ParhaladoResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\ImageColumn::make('foto')
+                    ->label('')
+                    ->disk('public')
+                    ->circular(),
+
                 Tables\Columns\TextColumn::make('nama')
                     ->searchable()
                     ->weight('bold'),
-    
+
                 Tables\Columns\TextColumn::make('kategori')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
@@ -80,13 +101,20 @@ class ParhaladoResource extends Resource
                         default => 'gray',
                     })
                     ->searchable(),
-                    
+
                 Tables\Columns\TextColumn::make('jabatan')
                     ->searchable(),
-                    
-                Tables\Columns\TextColumn::make('keterangan')
+
+                Tables\Columns\TextColumn::make('bidang')
+                    ->placeholder('Umum / Lainnya')
                     ->searchable(),
+
+                Tables\Columns\TextColumn::make('keterangan')
+                    ->placeholder('—')
+                    ->searchable()
+                    ->toggleable(),
             ])
+            ->defaultSort('nama')
             ->filters([
                 Tables\Filters\SelectFilter::make('kategori')
                     ->options([

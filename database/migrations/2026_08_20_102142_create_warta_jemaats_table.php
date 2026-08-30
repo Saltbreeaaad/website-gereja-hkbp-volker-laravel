@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('warta_jemaats', function (Blueprint $table) {
             $table->id();
-            $table->string('judul'); 
-            $table->date('tanggal'); 
-            $table->string('file_warta'); 
+            $table->string('judul');
+            $table->date('tanggal');
+            $table->string('file_warta');
             $table->timestamps();
         });
     }

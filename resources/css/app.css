@@ -1,9 +1,12 @@
 @import "tailwindcss";
+@import "swiper/css";
+@import "swiper/css/pagination";
+
 @source "../views";
 
 @theme {
-  --font-sans: "Plus Jakarta Sans", sans-serif;
-  --font-serif: "Playfair Display", serif;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", ui-serif, Georgia, serif;
 
   --color-hkbp-50: #eff6ff;
   --color-hkbp-100: #dbeafe;
@@ -20,5 +23,120 @@
   --color-gold-600: #ca8a04;
 }
 
-@import "swiper/css";
-@import "swiper/css/pagination";
+/* ---------------------------------------------------------------------------
+   Titik pagination Swiper
+
+   Ditulis DI LUAR @layer dengan sengaja. CSS Swiper diimpor tanpa layer, dan
+   aturan tanpa layer selalu mengalahkan aturan berlayer berapa pun
+   spesifisitasnya. Versi sebelumnya menaruh override ini di dalam
+   @layer components, sehingga warna merek tidak pernah benar-benar terpasang —
+   terukur di browser, titik tetap hitam 20% dan aktifnya biru #007aff bawaan
+   Swiper. Hanya `position` yang lolos, karena Swiper tidak mendeklarasikannya.
+
+   Ukuran diatur lewat variabel Swiper sendiri: variabel diwarisi, jadi tidak
+   ada adu spesifisitas dengan selektor Swiper yang bersarang tiga tingkat.
+   --------------------------------------------------------------------------- */
+:root {
+  /* Kotak sentuh 24x24px tanpa margin → jarak antar-pusat titik persis 24px,
+     memenuhi WCAG 2.5.8 tanpa area sentuh yang saling tumpang tindih.
+
+     Pendekatan lama (memperlebar area lewat ::after yang menonjol keluar)
+     terukur hanya menghasilkan 16x44px: area titik bertetangga saling menimpa
+     karena jarak antar-pusatnya cuma 16px. */
+  --swiper-pagination-bullet-size: 24px;
+  --swiper-pagination-bullet-horizontal-gap: 0px;
+  --swiper-pagination-bullet-border-radius: 0;
+
+  /* opacity induk ikut memudarkan ::before, jadi dijaga penuh di sini. */
+  --swiper-pagination-bullet-inactive-opacity: 1;
+}
+
+.swiper-pagination-bullet {
+  /* Kotaknya transparan; yang terlihat adalah bulatan 8px di ::before. */
+  background: transparent;
+  position: relative;
+  vertical-align: middle;
+}
+
+.swiper-pagination-bullet::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 9999px;
+  background-color: var(--color-slate-400);
+}
+
+.swiper-pagination-bullet-active::before {
+  background-color: var(--color-hkbp-800);
+}
+
+@layer components {
+  /* Cincin fokus yang digambar di dalam elemen. Cincin biasa (box-shadow atau
+     outline dengan offset positif) akan terpotong oleh induk overflow-hidden,
+     seperti pada kartu foto galeri. */
+  .fokus-dalam:focus-visible {
+    outline: 3px solid var(--color-hkbp-800);
+    outline-offset: -3px;
+  }
+}
+
+/* Latar gelap di belakang lightbox. Ditulis eksplisit karena varian `backdrop:`
+   tidak menghasilkan utilitas pada konfigurasi Tailwind v4 ini. */
+#lightbox::backdrop {
+  background-color: color-mix(in srgb, var(--color-hkbp-950) 80%, transparent);
+}
+
+@layer base {
+  /* Anchor-scroll tidak lagi tersembunyi di balik header sticky setinggi 5rem. */
+  [id] {
+    scroll-margin-top: 6rem;
+  }
+
+  /* Cincin fokus konsisten untuk navigasi keyboard. */
+  :focus-visible {
+    outline: 2px solid var(--color-hkbp-800);
+    outline-offset: 2px;
+  }
+
+  /* Placeholder gambar sebelum termuat — mencegah kedip putih. */
+  img {
+    background-color: var(--color-slate-100);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Renungan & warta sering dicetak untuk dibagikan ke jemaat lanjut usia. */
+@media print {
+  header,
+  footer,
+  .swiper-pagination,
+  [data-menu-toggle],
+  [data-no-print] {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.75rem;
+    word-break: break-all;
+  }
+}

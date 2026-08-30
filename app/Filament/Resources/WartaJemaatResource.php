@@ -3,21 +3,28 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\WartaJemaatResource\Pages;
-use App\Filament\Resources\WartaJemaatResource\RelationManagers;
 use App\Models\WartaJemaat;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class WartaJemaatResource extends Resource
 {
     protected static ?string $model = WartaJemaat::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-document-text';
+
+    protected static ?string $navigationGroup = 'Ibadah & Renungan';
+
+    protected static ?string $navigationLabel = 'Warta Jemaat';
+
+    protected static ?string $modelLabel = 'Warta Jemaat';
+
+    protected static ?string $pluralModelLabel = 'Warta Jemaat';
+
+    protected static ?int $navigationSort = 3;
 
     public static function form(Form $form): Form
     {
@@ -25,14 +32,25 @@ class WartaJemaatResource extends Resource
             ->schema([
                 Forms\Components\TextInput::make('judul')
                     ->required()
-                    ->maxLength(255),
+                    ->maxLength(255)
+                    ->placeholder('Cth: Warta Jemaat Minggu I Agustus 2026'),
+
                 Forms\Components\DatePicker::make('tanggal')
-                    ->required(),
+                    ->required()
+                    ->native(false)
+                    ->default(now()),
+
                 Forms\Components\FileUpload::make('file_warta')
                     ->label('Dokumen Warta (PDF)')
                     ->acceptedFileTypes(['application/pdf'])
+                    ->disk('public')
                     ->directory('warta-jemaat')
-                    ->required(),
+                    ->maxSize(10240)
+                    ->downloadable()
+                    ->openable()
+                    ->required()
+                    ->helperText('Format PDF, maksimal 10 MB.')
+                    ->columnSpanFull(),
             ]);
     }
 
@@ -41,25 +59,35 @@ class WartaJemaatResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('judul')
+                    ->weight('bold')
+                    ->wrap()
                     ->searchable(),
+
                 Tables\Columns\TextColumn::make('tanggal')
-                    ->date()
+                    ->date('d F Y')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('file_warta')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\IconColumn::make('file_warta')
+                    ->label('Berkas')
+                    ->boolean()
+                    ->getStateUsing(fn (WartaJemaat $record): bool => filled($record->file_warta))
+                    ->trueIcon('heroicon-o-document-check')
+                    ->falseIcon('heroicon-o-exclamation-triangle')
+                    ->trueColor('success')
+                    ->falseColor('danger')
+                    ->tooltip(fn (WartaJemaat $record): string => filled($record->file_warta)
+                        ? 'Berkas tersedia untuk diunduh jemaat'
+                        : 'Berkas belum diunggah — tombol unduh tidak tampil di website'),
             ])
-            ->filters([
-                //
-            ])
+            ->defaultSort('tanggal', 'desc')
             ->actions([
+                Tables\Actions\Action::make('unduh')
+                    ->label('Unduh')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('gray')
+                    ->url(fn (WartaJemaat $record): ?string => $record->urlUnduhan(), shouldOpenInNewTab: true)
+                    ->visible(fn (WartaJemaat $record): bool => filled($record->file_warta)),
+
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
@@ -67,14 +95,13 @@ class WartaJemaatResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->emptyStateHeading('Belum ada warta jemaat');
     }
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array

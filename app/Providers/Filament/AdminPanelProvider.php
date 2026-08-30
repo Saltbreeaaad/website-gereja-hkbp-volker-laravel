@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Widgets\RingkasanGereja;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -27,8 +28,20 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->brandName(config('gereja.nama_pendek'))
+            ->favicon(asset('favicon.svg'))
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => Color::Blue,
+            ])
+            ->sidebarCollapsibleOnDesktop()
+            // Lonceng notifikasi di panel: tempat permohonan gedung yang baru
+            // masuk muncul tanpa perlu SMTP.
+            ->databaseNotifications()
+            ->navigationGroups([
+                'Ibadah & Renungan',
+                'Jemaat',
+                'Dokumentasi',
+                'Administrasi',
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
@@ -37,8 +50,8 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
+                RingkasanGereja::class,
                 Widgets\AccountWidget::class,
-                Widgets\FilamentInfoWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,

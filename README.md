@@ -1,58 +1,295 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Website HKBP Persiapan Resort Volker
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Website resmi jemaat: jadwal ibadah, renungan harian, warta jemaat, laporan kas
+gereja, galeri kegiatan, dan permohonan penggunaan gedung gereja — dengan panel
+admin untuk pengurus.
 
-## About Laravel
+**Stack:** Laravel 13 · Filament 3 · Tailwind CSS 4 · Vite 8 · MySQL 8+
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Menyiapkan database
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Aplikasi memakai MySQL. Buat database dan penggunanya sekali saja:
 
-## Learning Laravel
+```sql
+CREATE DATABASE hkbp_volker
+  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
-```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+CREATE USER 'hkbp_volker'@'127.0.0.1' IDENTIFIED BY 'kata-sandi-anda';
+GRANT ALL PRIVILEGES ON hkbp_volker.* TO 'hkbp_volker'@'127.0.0.1';
+FLUSH PRIVILEGES;
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Lalu isi `DB_*` di `.env` sesuai kredensial di atas. Kolom `utf8mb4` wajib —
+nama dan renungan memuat karakter non-ASCII.
 
-## Contributing
+### Cadangan dan pemulihan
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Ambil cadangan sebelum migrasi, pembersihan data, atau apa pun yang menghapus baris:
 
-## Code of Conduct
+```bash
+mysqldump -u root -p --single-transaction --routines --triggers \
+  --default-character-set=utf8mb4 hkbp_volker > cadangan.sql
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+# memulihkan
+mysql -u root -p hkbp_volker < cadangan.sql
+```
 
-## Security Vulnerabilities
+`--single-transaction` membuat cadangan konsisten tanpa mengunci tabel.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Data contoh vs data jemaat
 
-## License
+Isi dari seeder bercampur dengan data jemaat yang sungguhan di basis data yang
+sama. Baris contoh dikenali dari ketiadaan berkas terunggah (`foto`,
+`file_warta` bernilai NULL) dan dari `created_at` saat seeder dijalankan.
+**Bersihkan sebelum situs dipakai sungguhan** — laporan kas terutama, karena
+angka contoh di sana tidak boleh terbaca sebagai catatan keuangan nyata.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Menjalankan secara lokal
+
+```bash
+composer install
+npm install
+
+cp .env.example .env
+php artisan key:generate
+
+php artisan migrate --seed      # membuat data contoh + akun admin
+php artisan storage:link        # agar foto & PDF bisa diakses publik
+
+npm run dev                     # terminal 1 — Vite
+php artisan serve               # terminal 2 — aplikasi
+```
+
+Akun admin dari seeder: `admin@hkbpvolker.test` / `password`
+(**ganti sebelum dipakai sungguhan**). Panel admin ada di `/admin`.
+
+Seeder aman dijalankan berulang — semuanya memakai `firstOrCreate`.
+
+## Pengujian
+
+```bash
+composer test             # 49 test
+./vendor/bin/pint         # format kode
+npm run build             # bundel produksi
+```
+
+Secara bawaan test memakai SQLite in-memory agar cepat. Karena aplikasi memuat
+SQL mentah yang bergantung dialek (`TIME(...)` pada pemeriksaan bentrok jadwal),
+sesekali jalankan juga suite yang sama di MySQL:
+
+```bash
+DB_CONNECTION=mysql DB_DATABASE=hkbp_volker_test \
+DB_USERNAME=hkbp_volker DB_PASSWORD='kata-sandi-anda' composer test
+```
+
+### Kenapa `composer test`, bukan `php artisan test`
+
+`composer test` memanggil `bin/phpunit.php`. Pada mesin yang ekstensi
+**mbstring**-nya tidak bisa dimuat — misalnya diblokir Smart App Control di
+Windows dan tidak ada hak admin untuk mematikannya — `vendor/bin/phpunit`
+menolak start sama sekali, padahal PHPUnit berjalan baik di atas polyfill.
+`bin/phpunit.php` mengulang pemeriksaan ekstensi itu sendiri dan hanya
+melonggarkan mbstring, itu pun setelah membuktikan setiap fungsi `mb_*` yang
+dibutuhkan tersedia. Ekstensi lain yang hilang tetap menghentikan proses.
+
+Polyfill-nya ada di `bootstrap/polyfill-mbstring.php` (dimuat lewat autoload
+`files`), berisi `mb_strimwidth()` dan `mb_strcut()` — dua fungsi yang
+dinyatakan "not implemented" oleh `symfony/polyfill-mbstring`, dan
+`mb_strimwidth()`-lah yang dipakai `Str::limit()` sehingga tanpanya beranda
+membalas 500. Keduanya dijaga `function_exists()`, jadi tidak melakukan apa pun
+di mesin yang mbstring-nya sehat.
+
+---
+
+## Struktur yang perlu diketahui
+
+| Berkas | Peran |
+|---|---|
+| `config/gereja.php` | **Satu sumber kebenaran** untuk nama, alamat, telepon, koordinat, dan menu navigasi. Ubah data gereja di sini, bukan di Blade. |
+| `app/Casts/JamHarian.php` | Cast untuk kolom `time`. Menormalkan penyimpanan ke `H:i:s` dan menambatkan jam ke hari ini agar dua jam selalu bisa dibandingkan. |
+| `app/Http/Requests/StorePenggunaanGerejaRequest.php` | Validasi permohonan gedung, termasuk pemeriksaan bentrok jadwal. |
+| `resources/views/components/` | `layout`, `page-hero`, `section-heading`, `empty-state`, `field`, `kartu-pelayan`, `filter-tahun`. |
+| `app/Policies/PengurusPolicy.php` | Dasar perizinan seluruh modul panel. Tiap modul hanya menyebut peran penanggung jawabnya. |
+| `app/Models/User.php` | `canAccessPanel()` adalah gerbang akses `/admin`. Filament menolak 403 semua orang bila metode ini hilang dan `APP_ENV` bukan `local`. |
+| `app/Support/CacheKonten.php` | Cache isi halaman publik, dibatalkan lewat nomor versi. |
+| `app/Models/Concerns/` | `MenyegarkanCacheKonten` (batalkan cache saat data berubah) dan `MembersihkanBerkas` (hapus berkas unggahan yang jadi yatim). |
+
+### Navigasi situs
+
+Menu navbar (desktop **dan** mobile) serta menu footer semuanya dibangkitkan dari
+`config('gereja.menu')`. Menambah halaman berarti: tambah route bernama, lalu
+tambahkan satu baris di config itu — navbar, menu mobile, footer, dan
+`sitemap.xml` ikut terbarui sendiri.
+
+### Peran pengurus
+
+Tiga peran, disimpan di kolom `users.role`:
+
+| Peran | Boleh menambah & menyunting | Menghapus |
+|---|---|---|
+| `admin` | semuanya, termasuk akun pengurus | ya |
+| `bendahara` | kas gereja | tidak |
+| `sekretaris` | jadwal, renungan, warta, galeri, pelayan, permohonan gedung | tidak |
+
+**Semua peran boleh melihat semua modul.** Menyembunyikan menu dari peran yang
+tidak boleh mengubahnya hanya memindahkan pertanyaannya ke grup WhatsApp
+pengurus. Yang dibatasi adalah tombol tambah/sunting/hapus.
+
+Penghapusan dikunci ke `admin` karena tidak bisa dibatalkan dan tidak
+meninggalkan jejak. Aturannya ada di `app/Policies/PengurusPolicy.php`; tiap
+modul hanya menyebut peran penanggung jawabnya.
+
+Administrator mengelola akun lewat menu **Akun Pengurus** di panel. Dari baris
+perintah:
+
+```bash
+php artisan hkbp:akun                       # tanya-jawab
+php artisan hkbp:akun ketua@gereja.id --peran=bendahara
+```
+
+Perintah yang sama mengganti kata sandi bila surelnya sudah terdaftar. Kata
+sandi sengaja tidak bisa diberikan lewat argumen — argumen tersimpan di riwayat
+shell dan terlihat di daftar proses.
+
+### Cadangan basis data
+
+`php artisan hkbp:cadangkan` menulis dump ke `storage/app/backups` dan membuang
+yang lebih tua dari 14 hari (`--simpan=N` untuk mengubahnya).
+
+Jadwalnya **tiap jam pada menit ke-15**, bukan sekali pada dini hari, dengan
+bendera `--sekali-sehari` yang membuat perintahnya langsung keluar bila hari itu
+sudah punya cadangan. Hasil akhirnya tetap satu cadangan per hari, tetapi mesin
+yang tidak menyala 24 jam — laptop pengembangan, atau server yang sempat mati
+semalam — tidak lagi kehilangan cadangan hari itu. Penjadwal Laravel tidak punya
+mekanisme menyusul jadwal yang terlewat, jadi inilah penggantinya.
+
+Cadangan manual (tanpa bendera itu) selalu dibuat, berapa pun yang sudah ada
+hari itu — misalnya tepat sebelum menjalankan migrasi.
+
+**Di server**, jadwal hanya berjalan bila ada satu entri cron:
+
+```
+* * * * * cd /path/ke/hkbp-volker && php artisan schedule:run >> /dev/null 2>&1
+```
+
+**Di Windows**, klik dua kali `pasang-jadwal.cmd` di akar proyek (sekali saja).
+Itu mendaftarkan tugas terjadwal "HKBP Volker - Penjadwal Laravel" yang
+menjalankan `schedule:run` tiap menit secara tersembunyi. `lepas-jadwal.cmd`
+melepasnya kembali.
+
+| Berkas | Peran |
+|---|---|
+| `pasang-jadwal.cmd` / `lepas-jadwal.cmd` | Yang Anda klik. |
+| `jadwal-tugas.ps1` | Mendaftar/melepas tugasnya. PowerShell, bukan `schtasks`, karena `schtasks /tr` tidak bisa diandalkan mengutip jalur berspasi. |
+| `jadwal-diam.vbs` | Peluncur tanpa jendela. Tanpa ini, jendela konsol berkedip **tiap menit** di layar. |
+| `jadwal-laravel.cmd` | Yang benar-benar memanggil `artisan schedule:run`. Berhenti diam-diam bila MySQL mati — di mesin pengembangan itu keadaan normal, bukan kegagalan. |
+
+Catatan penjadwal ada di `storage/logs/jadwal.log`, catatan cadangan di
+`storage/logs/cadangan.log`.
+
+### Cadangan pada akun basis data berprivilese terbatas
+
+`mysqldump --single-transaction` sejak MySQL 8.0.32 ikut menjalankan
+`FLUSH TABLES`, yang menuntut privilese `RELOAD`/`FLUSH_TABLES` — dan itu lazim
+tidak diberikan ke akun aplikasi di shared hosting. Tidak ada flag untuk
+mematikan flush tersebut.
+
+Perintahnya karena itu mencoba mode konsisten dulu, lalu **turun-derajat ke
+penguncian tabel biasa dengan peringatan yang terlihat** bila privilesenya
+kurang. Penulisan tertahan selama dump berjalan; untuk basis data sekecil ini
+itu hitungan detik.
+
+### Permohonan penggunaan gedung
+
+Setiap permohonan mendapat kode penelusuran (`WG-XXXXXXXX`) yang dibawa pemohon
+ke `/penggunaan-gereja/lacak` untuk melihat statusnya. **Isi kolom "Catatan
+untuk Pemohon" di panel terbaca oleh pemohon** di halaman itu — tulis alasan
+penolakan yang sopan dan jelas.
+
+Pengurus mendapat notifikasi di lonceng panel Filament saat permohonan masuk.
+Salurannya `database` supaya bekerja tanpa SMTP; untuk ikut mengirim surel,
+tambahkan `'mail'` pada `via()` di `app/Notifications/PermohonanGedungMasuk.php`
+setelah kredensial SMTP gereja terisi.
+
+### Cache isi halaman publik
+
+Halaman publik dibaca jauh lebih sering daripada diubah, jadi hasil query-nya
+disimpan di cache lewat `App\Support\CacheKonten`. Beranda yang tadinya menembak
+enam query per kunjungan kini nol query pada kunjungan berikutnya.
+
+Pembatalannya memakai **nomor versi**, bukan penghapusan kunci satu per satu:
+setiap model isi memakai trait `MenyegarkanCacheKonten`, yang menaikkan satu
+penghitung pada event `saved` dan `deleted`. Semua kunci lama otomatis tidak
+terpakai lagi. Konsekuensinya:
+
+- Perubahan dari panel admin **langsung** terlihat di situs; tidak perlu menunggu
+  TTL habis atau menjalankan `php artisan cache:clear`.
+- Data yang diubah **tanpa** lewat Eloquent (misalnya `UPDATE` langsung di SQL
+  atau `mysql` CLI) tidak memicu pembatalan. Setelah itu jalankan
+  `php artisan cache:clear`.
+- Tanggal hari ini ikut ke dalam kunci, sehingga "jadwal mendatang" berganti
+  sendiri saat lewat tengah malam.
+
+Setel `GEREJA_CACHE_KONTEN=false` untuk mematikannya saat menelusuri dugaan data
+basi.
+
+**Hanya nilai polos yang boleh masuk cache.** `config('cache.serializable_classes')`
+bernilai `false` — bawaan Laravel yang menolak meng-unserialize kelas PHP apa pun
+dari cache, sebagai perlindungan terhadap gadget chain bila `APP_KEY` bocor.
+Store `database` (dipakai produksi), `file`, dan `redis` semuanya menegakkannya.
+
+Menyimpan Eloquent Collection langsung ke cache karena itu **tidak bekerja**:
+yang kembali `__PHP_Incomplete_Class`, dan halamannya meledak pada kunjungan
+KEDUA — yang pertama masih dilayani hasil query segar. Pakailah:
+
+- `CacheKonten::ingatModel($kunci, Model::class, fn () => ...->get())`
+- `CacheKonten::ingatHalaman($kunci, Model::class, fn () => ...->paginate())`
+- `CacheKonten::ingat()` **hanya** untuk skalar dan array biasa.
+
+Store `array` yang dipakai pengujian tidak menyerialkan sama sekali, sehingga
+kesalahan ini tidak terlihat di sana. `tests/Feature/CacheStoreSerialisasiTest.php`
+menutup celah itu dengan memaksa store `file` dan memuat tiap halaman dua kali.
+
+### Berkas unggahan
+
+Filament hanya menulis path ke kolom; ia tidak pernah menghapus berkas lamanya.
+Trait `MembersihkanBerkas` menutup itu: berkas dibuang saat barisnya dihapus dan
+saat kolomnya diganti/dikosongkan, kecuali bila masih ada baris lain yang
+menunjuk path yang sama. Model baru yang punya kolom unggahan perlu memakai trait
+ini dan mendeklarasikan `kolomBerkas()`.
+
+### Aset
+
+Swiper dan Chart.js diimpor **dinamis**, hanya saat halaman benar-benar memuat
+carousel atau grafik. Halaman selain beranda hanya mengunduh ~11 kB JavaScript.
+Jangan mengubahnya menjadi impor statis di puncak `resources/js/app.js`.
+
+### Blade
+
+Blade **memotong argumen array multi-baris yang bersarang** pada direktif seperti
+`@json(...)` dan `@foreach([...] as $x)`. Rakit array semacam itu di dalam blok
+`@php`, lalu berikan variabelnya ke direktif.
+
+---
+
+## Sebelum ke produksi
+
+- [ ] `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL` diisi domain sungguhan
+- [ ] Buat akun administrator dengan `php artisan hkbp:akun`
+      (seeder data contoh menolak berjalan di produksi, jadi akun
+      `admin@hkbpvolker.test` / `password` tidak akan ikut terbawa)
+- [ ] Pasang entri cron `schedule:run` — tanpa itu cadangan harian tidak jalan
+      (di Windows: klik dua kali `pasang-jadwal.cmd`)
+- [ ] Isi data gereja yang sebenarnya di `config/gereja.php`
+      (alamat, telepon, koordinat peta saat ini masih contoh)
+- [ ] `php artisan storage:link` di server
+- [ ] `php artisan config:cache route:cache view:cache`
+- [ ] `CACHE_STORE` diarahkan ke store yang bertahan antar-request
+      (`database` — bawaan proyek ini — atau `redis`; **jangan** `array`,
+      karena cache isi halaman publik tidak akan pernah kena)
+- [ ] `npm run build`
+- [ ] HTTPS aktif — `AppServiceProvider` memaksa skema https saat produksi
+- [ ] Aktifkan modul Apache `mod_deflate`, `mod_expires`, `mod_headers`
+      (dipakai `public/.htaccess` untuk kompresi, cache, dan header keamanan)

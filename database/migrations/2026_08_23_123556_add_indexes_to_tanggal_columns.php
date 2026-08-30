@@ -12,7 +12,7 @@ return new class extends Migration
         Schema::table('warta_jemaats', fn (Blueprint $t) => $t->index('tanggal'));
         Schema::table('renungans', fn (Blueprint $t) => $t->index('tanggal'));
         Schema::table('galeris', fn (Blueprint $t) => $t->index('tanggal'));
-        
+
         Schema::table('kas_gerejas', function (Blueprint $t) {
             $t->index('tanggal');
             $t->index('jenis');
@@ -25,7 +25,7 @@ return new class extends Migration
         Schema::table('warta_jemaats', fn (Blueprint $t) => $t->dropIndex(['tanggal']));
         Schema::table('renungans', fn (Blueprint $t) => $t->dropIndex(['tanggal']));
         Schema::table('galeris', fn (Blueprint $t) => $t->dropIndex(['tanggal']));
-        
+
         Schema::table('kas_gerejas', function (Blueprint $t) {
             $t->dropIndex(['tanggal']);
             $t->dropIndex(['jenis']);

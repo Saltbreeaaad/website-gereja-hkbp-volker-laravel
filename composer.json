@@ -25,7 +25,10 @@
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
-        }
+        },
+        "files": [
+            "bootstrap/polyfill-mbstring.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
@@ -47,7 +50,7 @@
         ],
         "test": [
             "@php artisan config:clear --ansi @no_additional_args",
-            "@php artisan test"
+            "@php bin/phpunit.php --colors=always"
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
