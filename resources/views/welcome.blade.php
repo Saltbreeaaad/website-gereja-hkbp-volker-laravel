@@ -54,9 +54,7 @@
                 <div class="text-center mt-4" data-swiper-pagination></div>
             </div>
 
-            <div class="flex justify-center">
-                <x-swiper-toggle />
-            </div>
+            <x-swiper-kontrol label="daftar pelayan" />
 
             <p class="text-center mt-4">
                 <a href="{{ route('pelayan') }}" class="inline-block py-2 text-sm font-bold text-hkbp-800 hover:text-hkbp-900 underline underline-offset-4 transition-colors">Lihat profil lengkap pelayan &rarr;</a>
@@ -333,9 +331,7 @@
                 <div class="text-center mt-4" data-swiper-pagination></div>
             </div>
 
-            <div class="flex justify-center">
-                <x-swiper-toggle />
-            </div>
+            <x-swiper-kontrol label="galeri" />
 
             <p class="text-center mt-4">
                 <a href="{{ route('galeri') }}" class="inline-block py-2 text-sm font-bold text-hkbp-800 hover:text-hkbp-900 underline underline-offset-4 transition-colors">Lihat seluruh dokumentasi &rarr;</a>

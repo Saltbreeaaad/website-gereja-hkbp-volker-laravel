@@ -137,16 +137,22 @@ async function initCarousels() {
     const wadah = document.querySelectorAll('[data-swiper]');
     if (wadah.length === 0) return;
 
-    const [{ Swiper }, { Autoplay, A11y, Keyboard, Pagination }] = await Promise.all([
+    const [{ Swiper }, { Autoplay, A11y, Keyboard, Navigation, Pagination }] = await Promise.all([
         import('swiper'),
         import('swiper/modules'),
     ]);
 
-    Swiper.use([Autoplay, A11y, Keyboard, Pagination]);
+    Swiper.use([Autoplay, A11y, Keyboard, Navigation, Pagination]);
 
     wadah.forEach((el) => {
         const jeda = Number(el.dataset.swiperDelay || 3000);
         const jumlahSlide = el.querySelectorAll('.swiper-slide').length;
+
+        // Tombol geser dicari di induk yang sama dengan carousel-nya, pola yang
+        // sama dengan tombol jeda. Tiap carousel berada di wadah section
+        // sendiri, jadi tidak ada yang saling mengambil tombol milik tetangga.
+        const tombolPrev = el.parentElement?.querySelector('[data-swiper-prev]');
+        const tombolNext = el.parentElement?.querySelector('[data-swiper-next]');
 
         const swiper = new Swiper(el, {
             slidesPerView: 1,
@@ -162,12 +168,18 @@ async function initCarousels() {
                 ? false
                 : { delay: jeda, disableOnInteraction: false, pauseOnMouseEnter: true },
             pagination: { el: el.querySelector('[data-swiper-pagination]'), clickable: true },
+            navigation: { prevEl: tombolPrev, nextEl: tombolNext },
             breakpoints: {
                 640: { slidesPerView: 2 },
                 768: { slidesPerView: 3 },
                 1024: { slidesPerView: 4 },
             },
         });
+
+        // Baru ditampilkan setelah Swiper benar-benar terpasang: sebelum itu
+        // tombolnya tidak melakukan apa pun.
+        if (tombolPrev) tombolPrev.hidden = false;
+        if (tombolNext) tombolNext.hidden = false;
 
         pasangTombolJeda(el, swiper);
     });
@@ -191,16 +203,26 @@ function pasangTombolJeda(el, swiper) {
         tombol.querySelector('[data-label]').textContent = berjalan ? 'Jeda' : 'Putar';
     };
 
-    tombol.addEventListener('click', () => {
-        const berjalan = swiper.autoplay.running && !swiper.autoplay.paused;
+    // Niat pengguna disimpan sendiri, tidak dibaca ulang dari Swiper tiap klik.
+    //
+    // `swiper.autoplay.paused` ikut menyala karena hal-hal di luar kehendak
+    // pengguna: tab berpindah ke latar belakang, atau kursor sedang berada di
+    // atas carousel (pauseOnMouseEnter). Versi sebelumnya menyimpulkan "sedang
+    // berjalan" dari `running && !paused`, sehingga pada keadaan itu tombolnya
+    // terbalik — ditekan untuk menjeda, yang terjadi malah memulai ulang.
+    // Terlihat saat pengujian: menekan Jeda tidak menghentikan apa pun.
+    let diputar = true;
 
-        if (berjalan) {
-            swiper.autoplay.stop();
-        } else {
+    tombol.addEventListener('click', () => {
+        diputar = !diputar;
+
+        if (diputar) {
             swiper.autoplay.start();
+        } else {
+            swiper.autoplay.stop();
         }
 
-        setBerjalan(!berjalan);
+        setBerjalan(diputar);
     });
 
     setBerjalan(true);

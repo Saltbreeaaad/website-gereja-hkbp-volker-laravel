@@ -140,3 +140,25 @@
     word-break: break-all;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Tombol geser carousel
+
+   Swiper memasang kelas-kelas ini sendiri pada elemen navigasi:
+
+   - .swiper-button-disabled — sudah di slide pertama/terakhir pada carousel
+     yang tidak berputar. Dibuat pudar dan tidak bisa diklik, bukan disembunyikan:
+     tombol yang hilang-timbul membuat tata letak melompat dan posisi tombol
+     sebelahnya bergeser saat digeser.
+   - .swiper-button-lock — seluruh slide muat sekaligus, jadi tidak ada yang
+     perlu digeser. Ini baru layak disembunyikan sepenuhnya.
+   --------------------------------------------------------------------------- */
+.swiper-button-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.swiper-button-lock {
+  display: none;
+}

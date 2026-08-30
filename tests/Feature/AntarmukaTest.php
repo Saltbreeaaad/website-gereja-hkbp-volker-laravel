@@ -62,6 +62,40 @@ class AntarmukaTest extends TestCase
     }
 
     #[Test]
+    public function carousel_menyediakan_tombol_geser_kiri_dan_kanan(): void
+    {
+        $response = $this->get(route('home'))->assertOk();
+
+        // Dua carousel di beranda: pelayan dan galeri.
+        $isi = $response->getContent();
+        $this->assertSame(2, substr_count($isi, 'data-swiper-prev'));
+        $this->assertSame(2, substr_count($isi, 'data-swiper-next'));
+
+        // Label khusus per carousel, bukan "sebelumnya/berikutnya" yang generik:
+        // pembaca layar menyebutkan tombol di luar konteks visualnya.
+        $response->assertSee('Geser daftar pelayan ke kiri')
+            ->assertSee('Geser daftar pelayan ke kanan')
+            ->assertSee('Geser galeri ke kiri')
+            ->assertSee('Geser galeri ke kanan');
+    }
+
+    #[Test]
+    public function tombol_carousel_tersembunyi_sampai_javascript_memasangnya(): void
+    {
+        // Tanpa JS carousel-nya menjadi daftar biasa, dan tombol yang tidak
+        // melakukan apa pun lebih membingungkan daripada tidak ada tombol.
+        $isi = $this->get(route('home'))->assertOk()->getContent();
+
+        preg_match_all('/<button[^>]*data-swiper-(?:prev|next|toggle)[^>]*>/', $isi, $cocok);
+
+        $this->assertCount(6, $cocok[0], 'Harus ada 6 tombol kontrol carousel.');
+
+        foreach ($cocok[0] as $tombol) {
+            $this->assertStringContainsString('hidden', $tombol);
+        }
+    }
+
+    #[Test]
     public function ringkasan_galat_formulir_dapat_menerima_fokus(): void
     {
         $this->from(route('penggunaan-gereja'))
