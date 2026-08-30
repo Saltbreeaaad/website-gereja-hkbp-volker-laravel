@@ -274,6 +274,48 @@ Blade **memotong argumen array multi-baris yang bersarang** pada direktif sepert
 
 ---
 
+## Menunjukkan situs ke orang lain (presentasi)
+
+Klik dua kali `presentasi.cmd` di akar proyek (`hkbp-volker/`). Ia menyalakan MySQL, membangun
+aset, menjalankan server, lalu membuka Cloudflare Tunnel dan mencetak URL
+`https://....trycloudflare.com` yang bisa dibuka siapa pun.
+
+Tiga hal yang perlu diingat:
+
+- **Jendelanya harus tetap terbuka.** Menutupnya mematikan tunnel dan URL-nya
+  langsung mati.
+- **URL berganti setiap kali dijalankan ulang.** Jangan dicetak di undangan.
+- Laptop harus menyala dan terhubung internet selama presentasi.
+
+Untuk alamat permanen yang hidup walau laptop mati, situs ini perlu dideploy ke
+hosting sungguhan (cPanel, Railway, atau VPS).
+
+### Kenapa situs harus benar di belakang proxy
+
+Tunnel — dan nanti hosting mana pun — meneruskan permintaan ke PHP sebagai
+`http` meski pengunjung membukanya lewat `https`. Dua hal yang karena itu perlu
+diatur, dan keduanya tidak terlihat rusak sama sekali dari `localhost`:
+
+1. `bootstrap/app.php` memercayai `X-Forwarded-Proto` supaya URL aset ikut
+   `https`. Tanpa itu browser memblokirnya sebagai mixed content dan situs
+   tampil **tanpa CSS sama sekali**. `X-Forwarded-Host` sengaja **tidak**
+   dipercaya — itu vektor pemalsuan host, dan nama host aslinya sudah datang
+   lewat header `Host` biasa.
+
+   Nilainya ditulis harfiah, bukan `env()`: `bootstrap/app.php` berjalan sebelum
+   `.env` dimuat, jadi `env()` di sana selalu `null` dan pengaturannya diam-diam
+   tidak pernah berlaku.
+
+2. `config/filesystems.php` memakai URL relatif `/storage`, bukan `APP_URL`.
+   Menempelkan `APP_URL` mengunci seluruh foto ke satu nama host — di host lain
+   semuanya menunjuk `http://localhost:8000` yang tidak ada di komputer
+   pengunjung. URL absolut yang memang perlu (`og:image`) dijadikan absolut di
+   layout.
+
+`tests/Feature/DiBelakangProxyTest.php` menjaga keduanya.
+
+---
+
 ## Sebelum ke produksi
 
 - [ ] `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL` diisi domain sungguhan

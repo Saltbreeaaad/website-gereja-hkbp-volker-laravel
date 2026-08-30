@@ -11,7 +11,11 @@
         strip_tags($description ?: $gereja['deskripsi']), 160
     );
     $canonical = url()->current();
-    $ogImage = $image ?: asset('favicon.svg');
+    // og:image wajib absolut — perayap media sosial tidak punya konteks halaman
+    // untuk menyelesaikan URL relatif. Foto dari disk `public` sengaja relatif
+    // (lihat config/filesystems.php), jadi dijadikan absolut di sini. `url()`
+    // membiarkan URL yang sudah absolut apa adanya.
+    $ogImage = $image ? url($image) : asset('favicon.svg');
 
     // Dirakit di sini, bukan inline di direktif @json: kompilator Blade memotong
     // argumen array multi-baris yang bersarang.

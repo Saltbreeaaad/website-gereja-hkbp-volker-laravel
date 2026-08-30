@@ -41,7 +41,20 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
+            /*
+             * URL relatif, bukan diturunkan dari APP_URL.
+             *
+             * Berkas ini dilayani oleh host mana pun yang sedang membuka
+             * halaman — domain gereja, alamat tunnel saat presentasi, atau
+             * localhost. Menempelkan APP_URL mengunci seluruh foto ke satu
+             * nama host, sehingga di host lain semuanya rusak: foto pelayan,
+             * galeri, dan gambar renungan menunjuk ke `http://localhost:8000`
+             * yang tidak ada di komputer pengunjung.
+             *
+             * URL absolut yang memang dibutuhkan (og:image) dijadikan absolut
+             * di layout lewat `url()`, bukan di sini.
+             */
+            'url' => '/storage',
             'visibility' => 'public',
             'throw' => false,
             'report' => false,
