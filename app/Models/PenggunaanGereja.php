@@ -3,16 +3,32 @@
 namespace App\Models;
 
 use App\Casts\JamHarian;
+use App\Models\Concerns\MencatatAktivitas;
 use App\Models\Concerns\MenyegarkanCacheKonten;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
+/**
+ * @property int $id
+ * @property string $kode
+ * @property string $nama_kegiatan
+ * @property string $nama_pemohon
+ * @property string $kontak
+ * @property CarbonImmutable $tanggal
+ * @property CarbonImmutable $waktu_mulai
+ * @property CarbonImmutable $waktu_selesai
+ * @property string|null $keterangan
+ * @property string $status
+ * @property string|null $catatan_admin
+ */
 class PenggunaanGereja extends Model
 {
-    use HasFactory, MenyegarkanCacheKonten;
+    use HasFactory, MencatatAktivitas, MenyegarkanCacheKonten;
 
     public const MENUNGGU = 'Menunggu';
 
@@ -111,6 +127,58 @@ class PenggunaanGereja extends Model
         static::creating(function (self $permohonan): void {
             $permohonan->kode ??= static::kodeBaru();
         });
+
+        static::created(fn (self $permohonan) => $permohonan->catatStatus(null, $permohonan->status));
+
+        static::updated(function (self $permohonan): void {
+            if ($permohonan->wasChanged('status')) {
+                $permohonan->catatStatus(
+                    (string) $permohonan->getOriginal('status'),
+                    $permohonan->status,
+                    $permohonan->catatan_admin,
+                );
+            }
+        });
+    }
+
+    /** @return HasMany<RiwayatStatusPenggunaanGereja, $this> */
+    public function riwayatStatus(): HasMany
+    {
+        return $this->hasMany(RiwayatStatusPenggunaanGereja::class)->latest('created_at');
+    }
+
+    private function catatStatus(?string $lama, string $baru, ?string $catatan = null): void
+    {
+        $this->riwayatStatus()->create([
+            'user_id' => Auth::id(),
+            'status_lama' => $lama,
+            'status_baru' => $baru,
+            'catatan' => $catatan,
+        ]);
+    }
+
+    public function urlWhatsAppStatus(): ?string
+    {
+        $nomor = preg_replace('/\D+/', '', $this->kontak);
+
+        if (! is_string($nomor) || strlen($nomor) < 8) {
+            return null;
+        }
+
+        if (str_starts_with($nomor, '0')) {
+            $nomor = '62'.substr($nomor, 1);
+        }
+
+        $pesan = sprintf(
+            'Horas %s, status permohonan %s (%s) adalah: %s. Cek rincian: %s',
+            $this->nama_pemohon,
+            $this->nama_kegiatan,
+            $this->kode,
+            $this->status,
+            route('penggunaan-gereja.lacak', ['kode' => $this->kode]),
+        );
+
+        return 'https://wa.me/'.$nomor.'?text='.rawurlencode($pesan);
     }
 
     /**

@@ -70,10 +70,18 @@ Seeder aman dijalankan berulang — semuanya memakai `firstOrCreate`.
 ## Pengujian
 
 ```bash
-composer test             # 49 test
-./vendor/bin/pint         # format kode
-npm run build             # bundel produksi
+composer test                    # seluruh suite
+./vendor/bin/pint                # format kode
+./vendor/bin/phpstan analyse     # analisis statis
+npm run build                    # bundel produksi
 ```
+
+Keempatnya persis yang dijalankan CI (`.github/workflows/ci.yml`) pada tiap push
+ke `main` dan tiap pull request. Jalankan semuanya sebelum commit; yang gagal di
+CI selalu juga gagal di sini.
+
+Jumlah test sengaja tidak ditulis di sini — angka semacam itu basi tanpa ada yang
+menyadarinya. PHPUnit mencetaknya sendiri di baris terakhir.
 
 Secara bawaan test memakai SQLite in-memory agar cepat. Karena aplikasi memuat
 SQL mentah yang bergantung dialek (`TIME(...)` pada pemeriksaan bentrok jadwal),
@@ -142,17 +150,36 @@ Penghapusan dikunci ke `admin` karena tidak bisa dibatalkan dan tidak
 meninggalkan jejak. Aturannya ada di `app/Policies/PengurusPolicy.php`; tiap
 modul hanya menyebut peran penanggung jawabnya.
 
-Administrator mengelola akun lewat menu **Akun Pengurus** di panel. Dari baris
-perintah:
+### Mengganti surel dan kata sandi pengurus
+
+**Lewat panel (cara utama)** — ini satu-satunya cara mengganti **surel**:
+
+1. Masuk ke `/admin` sebagai administrator.
+2. Menu **Akun Pengurus** (grup Administrasi).
+3. **Edit** pada baris yang ingin diubah.
+4. Ubah surel dan/atau isi kolom kata sandi, lalu **Save**.
+
+Kolom kata sandi yang **dibiarkan kosong berarti tidak diubah**, bukan
+dikosongkan. Minimal 8 karakter, dan surel tidak boleh sama dengan akun lain.
+
+**Lewat baris perintah** — untuk membuat akun, mengganti peran, dan mengatur
+ulang kata sandi (misalnya saat kata sandinya lupa dan panel tidak bisa dibuka):
 
 ```bash
 php artisan hkbp:akun                       # tanya-jawab
 php artisan hkbp:akun ketua@gereja.id --peran=bendahara
 ```
 
-Perintah yang sama mengganti kata sandi bila surelnya sudah terdaftar. Kata
-sandi sengaja tidak bisa diberikan lewat argumen — argumen tersimpan di riwayat
-shell dan terlihat di daftar proses.
+Perintah ini mengganti kata sandi bila surelnya **sudah** terdaftar, dan membuat
+akun baru bila **belum**. Kata sandi sengaja tidak bisa diberikan lewat argumen —
+argumen tersimpan di riwayat shell dan terlihat di daftar proses.
+
+> **`hkbp:akun` tidak bisa mengganti surel.** Menjalankannya dengan surel yang
+> belum terdaftar akan membuat akun **baru**, bukan mengganti nama akun lama.
+> Untuk mengganti surel, pakai panel. Kalau kata sandinya lupa: atur ulang lewat
+> perintah ini dulu, masuk ke panel, baru ganti surelnya di sana.
+
+Prosedur di atas dijaga `tests/Feature/GantiAkunPengurusTest.php`.
 
 ### Cadangan basis data
 
@@ -213,6 +240,43 @@ Pengurus mendapat notifikasi di lonceng panel Filament saat permohonan masuk.
 Salurannya `database` supaya bekerja tanpa SMTP; untuk ikut mengirim surel,
 tambahkan `'mail'` pada `via()` di `app/Notifications/PermohonanGedungMasuk.php`
 setelah kredensial SMTP gereja terisi.
+
+### Fitur operasional dan keamanan
+
+- **Keamanan Akun** di panel mengaktifkan autentikasi dua langkah (TOTP) dan
+  kode pemulihan. Administrator juga dapat mengakhiri semua sesi milik akun
+  pengurus dari menu **Akun Pengurus**.
+- **Log Aktivitas** mencatat perubahan data penting tanpa menyimpan kata sandi,
+  rahasia autentikasi dua langkah, atau token sesi.
+- **Periode Kas** mengunci transaksi lama dan mendukung saldo awal. Laporan kas
+  dapat dicetak/disimpan sebagai PDF dari browser atau diekspor sebagai CSV.
+- Bukti transaksi kas disimpan secara privat, bukan di direktori publik.
+- Foto galeri, renungan, dan parhalado baru otomatis diperkecil, dikonversi ke
+  WebP, dan dibuatkan gambar mini. Foto lama dapat diperiksa lebih dulu dengan
+  `php artisan hkbp:optimalkan-gambar --dry-run`.
+- Situs publik dapat dipasang sebagai aplikasi (PWA), mempunyai halaman luring,
+  pencarian warta/galeri/arsip renungan, serta kalender iCalendar penggunaan
+  gedung di `/penggunaan-gereja/kalender.ics`.
+- **Agenda Gereja** tersedia di `/agenda`, termasuk unduhan kalender iCalendar
+  agar jadwal ibadah dapat disimpan ke aplikasi kalender jemaat.
+- **Pengumuman Penting** dapat dijadwalkan dari panel dan otomatis berhenti
+  tampil pada waktu akhir yang ditentukan.
+- **Permohonan Doa** di `/doa` adalah formulir privat. Pesan tidak dicatat di
+  log aktivitas dan hanya dapat dibuka administrator atau sekretaris melalui
+  panel pengurus.
+
+Perintah pemeliharaan tambahan:
+
+```bash
+php artisan hkbp:periksa-cadangan
+php artisan hkbp:pulihkan nama-cadangan.sql
+php artisan hkbp:kedaluwarsakan-permohonan
+php artisan hkbp:optimalkan-gambar --dry-run
+```
+
+Pemulihan basis data bersifat destruktif dan meminta konfirmasi. Gunakan hanya
+terhadap berkas di `storage/app/backups`; perintah akan memvalidasi berkas dan
+membersihkan tabel lama sebelum mengimpor cadangan secara utuh.
 
 ### Cache isi halaman publik
 

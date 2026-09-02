@@ -1,0 +1,19 @@
+{
+  "name": "HKBP Persiapan Resort Volker",
+  "short_name": "HKBP Volker",
+  "description": "Jadwal, renungan, warta, dan pelayanan HKBP Volker.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#00255c",
+  "lang": "id",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

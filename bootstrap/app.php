@@ -19,6 +19,14 @@ return Application::configure(basePath: dirname(__DIR__))
             SecurityHeaders::class,
         ]);
 
+        // Panel Filament menamai halaman masuknya `filament.admin.auth.login`,
+        // bukan `login`. Middleware `auth` bawaan Laravel mengalihkan tamu ke
+        // `route('login')` dan akan melempar RouteNotFoundException karena nama
+        // itu tidak pernah didaftarkan di proyek ini. Halaman admin yang berada
+        // di luar panel (laporan kas, tantangan 2FA) memakai `auth`, jadi
+        // tujuannya ditunjuk sekali di sini.
+        $middleware->redirectGuestsTo(fn () => route('filament.admin.auth.login'));
+
         // Di belakang proxy (Cloudflare Tunnel, cPanel, nginx, load balancer),
         // permintaan sampai ke PHP sebagai http meski pengunjung membukanya
         // lewat https. Tanpa memercayai X-Forwarded-*, Laravel membangkitkan

@@ -9,11 +9,11 @@
 
             <div class="mt-8 flex flex-wrap gap-3 justify-center">
                 <a href="{{ route('home') }}"
-                   class="inline-flex items-center gap-2 bg-hkbp-800 hover:bg-hkbp-900 text-white text-sm font-bold px-5 py-3 rounded-xl transition-colors">
+                   class="inline-flex items-center gap-2 bg-linear-to-b from-hkbp-800 to-hkbp-900 hover:from-hkbp-700 hover:to-hkbp-800 text-white text-sm font-bold px-5 py-3 rounded-xl shadow-brand-sm transition-all duration-200 hover:-translate-y-0.5">
                     <i data-lucide="cross" class="w-4 h-4" aria-hidden="true"></i> Kembali ke Beranda
                 </a>
                 <a href="{{ route('penggunaan-gereja') }}"
-                   class="inline-flex items-center gap-2 bg-white border border-slate-300 hover:border-hkbp-800 text-slate-700 text-sm font-bold px-5 py-3 rounded-xl transition-colors">
+                   class="inline-flex items-center gap-2 bg-white border border-slate-200 hover:border-hkbp-800 text-slate-700 text-sm font-bold px-5 py-3 rounded-xl transition-all duration-200 hover:-translate-y-0.5">
                     <i data-lucide="calendar-days" class="w-4 h-4" aria-hidden="true"></i> Jadwal Gereja
                 </a>
             </div>

@@ -3,16 +3,26 @@
 namespace App\Models;
 
 use App\Models\Concerns\MembersihkanBerkas;
+use App\Models\Concerns\MencatatAktivitas;
+use App\Models\Concerns\MengoptimalkanGambar;
 use App\Models\Concerns\MenyegarkanCacheKonten;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property int $id
+ * @property string $judul
+ * @property string $kategori
+ * @property string|null $foto
+ * @property CarbonImmutable $tanggal
+ */
 class Galeri extends Model
 {
-    use HasFactory, MembersihkanBerkas, MenyegarkanCacheKonten;
+    use HasFactory, MembersihkanBerkas, MencatatAktivitas, MengoptimalkanGambar, MenyegarkanCacheKonten;
 
-    protected $fillable = ['judul', 'foto', 'tanggal'];
+    protected $fillable = ['judul', 'kategori', 'foto', 'tanggal'];
 
     protected function casts(): array
     {
@@ -28,5 +38,10 @@ class Galeri extends Model
     protected function kolomBerkas(): array
     {
         return ['foto'];
+    }
+
+    protected function kolomGambar(): array
+    {
+        return ['foto' => 1600];
     }
 }

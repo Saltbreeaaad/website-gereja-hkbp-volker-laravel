@@ -6,6 +6,7 @@ use App\Filament\Resources\UserResource\Pages;
 use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -112,6 +113,20 @@ class UserResource extends Resource
                     ->options(User::PERAN),
             ])
             ->actions([
+                Tables\Actions\Action::make('akhiri_sesi')
+                    ->label('Akhiri Semua Sesi')
+                    ->icon('heroicon-o-lock-closed')
+                    ->color('warning')
+                    ->requiresConfirmation()
+                    ->modalDescription('Akun ini akan keluar dari seluruh perangkat dan harus masuk kembali.')
+                    ->action(function (User $record): void {
+                        $jumlah = $record->akhiriSemuaSesi();
+
+                        Notification::make()
+                            ->title($jumlah > 0 ? "{$jumlah} sesi diakhiri" : 'Tidak ada sesi aktif')
+                            ->success()
+                            ->send();
+                    }),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make()
                     // Pagar kedua di atas UserPolicy::delete(): tombolnya pun tidak
@@ -122,7 +137,15 @@ class UserResource extends Resource
             ->emptyStateHeading('Belum ada akun pengurus lain');
     }
 
-    private static function hanyaSatuAdmin(): bool
+    /**
+     * `protected`, bukan `private`.
+     *
+     * Dipanggil lewat `static::`, dan pemanggilan itu tidak aman pada metode
+     * privat: begitu resource ini diturunkan, `static::` menunjuk kelas anak
+     * yang tidak dapat melihat metode privat induknya, dan panggilannya gagal
+     * di runtime — bukan saat kompilasi.
+     */
+    protected static function hanyaSatuAdmin(): bool
     {
         return User::query()->where('role', User::ADMIN)->count() <= 1;
     }

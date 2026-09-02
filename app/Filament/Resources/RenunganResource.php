@@ -48,14 +48,23 @@ class RenunganResource extends Resource
                 Forms\Components\FileUpload::make('foto')
                     ->label('Gambar Ilustrasi')
                     ->image()
+                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                    // Dimensi dibatasi, bukan hanya ukuran berkas. PNG 9000x9000
+                    // berisi bidang polos hanya seperempat megabita namun menuntut
+                    // ratusan megabita saat dibuka pengoptimal — dan kehabisan
+                    // memori di sana adalah fatal error yang tidak bisa ditangkap.
+                    // Ditolak di sini supaya pengurus mendapat pesan yang jelas,
+                    // bukan halaman 500 (lihat App\Support\PengoptimalGambar).
+                    ->rules(['dimensions:max_width=6000,max_height=6000'])
+                    ->validationMessages(['dimensions' => 'Dimensi gambar maksimal 6000 x 6000 piksel. Perkecil dulu sebelum diunggah.'])
                     ->disk('public')
                     ->directory('renungan-photos')
                     ->imageEditor()
                     ->imageResizeMode('cover')
-                    ->imageResizeTargetWidth(1200)
-                    ->imageResizeTargetHeight(630)
+                    ->imageResizeTargetWidth('1200')
+                    ->imageResizeTargetHeight('630')
                     ->maxSize(2048)
-                    ->helperText('Maksimal 2 MB. Ukuran ideal 1200x630 piksel.')
+                    ->helperText('JPG, PNG, atau WebP; maksimal 2 MB. Gambar diubah ke WebP dan metadata dibuang otomatis.')
                     ->columnSpanFull(),
 
                 Forms\Components\Textarea::make('isi')

@@ -1,9 +1,9 @@
 import {
     createIcons,
-    ArrowRight, BookOpen, BookX, Calendar, CalendarCheck, CalendarDays, CalendarX, Camera,
-    ChevronLeft, ChevronRight, CircleCheck, Clock, Cross, Eye, FileText, Hourglass,
-    Inbox, MapPin, Menu, Pause, Phone, Play, Search, Send, Sparkles, Target, User,
-    Wallet, X, ZoomIn,
+    ArrowRight, BookOpen, BookX, Building2, Calendar, CalendarCheck, CalendarDays, CalendarPlus, CalendarX, Camera,
+    ChevronLeft, ChevronRight, CircleCheck, Clock, Clock3, Cross, Eye, FileText, Heart, HeartHandshake, Home, Hourglass,
+    Inbox, MapPin, Megaphone, Menu, Pause, Phone, Play, Search, Send, Share2, ShieldCheck, Sparkles, Target, User, UserRoundX,
+    Wallet, WifiOff, X, ZoomIn,
 } from 'lucide';
 
 /**
@@ -20,10 +20,10 @@ const kurangiGerak = window.matchMedia('(prefers-reduced-motion: reduce)').match
  * ------------------------------------------------------------------ */
 
 const icons = {
-    ArrowRight, BookOpen, BookX, Calendar, CalendarCheck, CalendarDays, CalendarX, Camera,
-    ChevronLeft, ChevronRight, CircleCheck, Clock, Cross, Eye, FileText, Hourglass,
-    Inbox, MapPin, Menu, Pause, Phone, Play, Search, Send, Sparkles, Target, User,
-    Wallet, X, ZoomIn,
+    ArrowRight, BookOpen, BookX, Building2, Calendar, CalendarCheck, CalendarDays, CalendarPlus, CalendarX, Camera,
+    ChevronLeft, ChevronRight, CircleCheck, Clock, Clock3, Cross, Eye, FileText, Heart, HeartHandshake, Home, Hourglass,
+    Inbox, MapPin, Megaphone, Menu, Pause, Phone, Play, Search, Send, Share2, ShieldCheck, Sparkles, Target, User, UserRoundX,
+    Wallet, WifiOff, X, ZoomIn,
 };
 
 /* ------------------------------------------------------------------ *
@@ -61,7 +61,13 @@ function initMenuMobile() {
     });
 
     // Kembali ke layar lebar saat menu terbuka: tutup supaya state tidak nyangkut.
-    window.matchMedia('(min-width: 48rem)').addEventListener('change', (e) => {
+    //
+    // Ambangnya harus sama dengan tempat menu desktop muncul (xl:, 80rem di
+    // layout). Sebelumnya 48rem: menu mobile dipaksa tertutup pada 768px
+    // padahal tombol hamburger masih satu-satunya navigasi sampai jauh di
+    // atasnya, jadi pengguna yang memperlebar jendela kehilangan menunya tanpa
+    // mendapat penggantinya.
+    window.matchMedia('(min-width: 80rem)').addEventListener('change', (e) => {
         if (e.matches) setTerbuka(false);
     });
 }
@@ -91,6 +97,41 @@ function initFokusGalat() {
 
     ringkasan.focus();
     ringkasan.scrollIntoView({ block: 'center', behavior: kurangiGerak ? 'auto' : 'smooth' });
+}
+
+function initBagikan() {
+    document.querySelectorAll('[data-share-url]').forEach((tombol) => {
+        tombol.addEventListener('click', async () => {
+            const data = { title: tombol.dataset.shareTitle || document.title, url: tombol.dataset.shareUrl };
+
+            try {
+                if (navigator.share) {
+                    await navigator.share(data);
+                } else {
+                    await navigator.clipboard.writeText(data.url);
+                    const label = tombol.querySelector('[data-share-label]');
+                    if (label) {
+                        label.textContent = 'Tautan disalin';
+                        window.setTimeout(() => { label.textContent = 'Bagikan renungan'; }, 2000);
+                    }
+                }
+            } catch (error) {
+                if (error?.name !== 'AbortError') window.location.href = data.url;
+            }
+        });
+    });
+}
+
+function initCetak() {
+    document.querySelectorAll('[data-print]').forEach((tombol) => {
+        tombol.addEventListener('click', () => window.print());
+    });
+}
+
+function initMuatUlang() {
+    document.querySelectorAll('[data-reload]').forEach((tombol) => {
+        tombol.addEventListener('click', () => location.reload());
+    });
 }
 
 /* ------------------------------------------------------------------ *
@@ -317,6 +358,9 @@ function init() {
     initMenuMobile();
     initAutoSubmit();
     initFokusGalat();
+    initBagikan();
+    initCetak();
+    initMuatUlang();
     initLightbox();
     initCarousels();
     initGrafikKas();
@@ -326,4 +370,8 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
 } else {
     init();
+}
+
+if ('serviceWorker' in navigator && (window.isSecureContext || location.hostname === 'localhost')) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
 }

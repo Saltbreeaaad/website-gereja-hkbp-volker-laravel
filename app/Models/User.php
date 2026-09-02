@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\Concerns\MencatatAktivitas;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
@@ -11,13 +12,25 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $email
+ * @property string $password
+ * @property string $role
+ * @property string|null $two_factor_secret
+ * @property list<string>|null $two_factor_recovery_codes
+ * @property Carbon|null $two_factor_confirmed_at
+ */
 #[Fillable(['name', 'email', 'password', 'role'])]
-#[Hidden(['password', 'remember_token'])]
+#[Hidden(['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'])]
 class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, MencatatAktivitas, Notifiable;
 
     public const ADMIN = 'admin';
 
@@ -42,6 +55,9 @@ class User extends Authenticatable implements FilamentUser
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'two_factor_secret' => 'encrypted',
+            'two_factor_recovery_codes' => 'encrypted:array',
+            'two_factor_confirmed_at' => 'datetime',
         ];
     }
 
@@ -82,5 +98,53 @@ class User extends Authenticatable implements FilamentUser
     public function labelPeran(): string
     {
         return self::PERAN[$this->role] ?? $this->role;
+    }
+
+    public function twoFactorAktif(): bool
+    {
+        $atribut = $this->getAttributes();
+
+        if (array_key_exists('two_factor_secret', $atribut) && array_key_exists('two_factor_confirmed_at', $atribut)) {
+            return filled($atribut['two_factor_secret']) && $atribut['two_factor_confirmed_at'] !== null;
+        }
+
+        // Model dari actingAs/session atau query kolom-terbatas dapat tidak
+        // membawa kolom nullable. Verifikasi ke DB agar keadaan aktif tidak
+        // pernah salah dianggap nonaktif.
+        return $this->newQuery()
+            ->whereKey($this->getKey())
+            ->whereNotNull('two_factor_secret')
+            ->whereNotNull('two_factor_confirmed_at')
+            ->exists();
+    }
+
+    /** Hapus sesi aktif akun ini dari penyimpanan sesi database. */
+    public function akhiriSemuaSesi(?string $kecualiId = null): int
+    {
+        if (config('session.driver') !== 'database') {
+            return 0;
+        }
+
+        return DB::table(config('session.table', 'sessions'))
+            ->where('user_id', $this->getKey())
+            ->when($kecualiId, fn ($query) => $query->where('id', '!=', $kecualiId))
+            ->delete();
+    }
+
+    protected static function booted(): void
+    {
+        static::updated(function (self $user): void {
+            if (! $user->wasChanged('password')) {
+                return;
+            }
+
+            $user->akhiriSemuaSesi(
+                app()->runningInConsole() || ! request()->hasSession()
+                    ? null
+                    : request()->session()->getId(),
+            );
+        });
+
+        static::deleted(fn (self $user) => $user->akhiriSemuaSesi());
     }
 }

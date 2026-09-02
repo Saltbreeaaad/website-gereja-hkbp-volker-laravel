@@ -2,6 +2,7 @@
 
 namespace App\Models\Concerns;
 
+use App\Support\PengoptimalGambar;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -69,6 +70,12 @@ trait MembersihkanBerkas
             return;
         }
 
-        Storage::disk('public')->delete($path);
+        $varian = [$path];
+
+        if (str_ends_with(strtolower($path), '.webp')) {
+            $varian[] = PengoptimalGambar::pathThumbnail($path);
+        }
+
+        Storage::disk('public')->delete($varian);
     }
 }

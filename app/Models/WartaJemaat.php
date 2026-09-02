@@ -3,15 +3,23 @@
 namespace App\Models;
 
 use App\Models\Concerns\MembersihkanBerkas;
+use App\Models\Concerns\MencatatAktivitas;
 use App\Models\Concerns\MenyegarkanCacheKonten;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * @property int $id
+ * @property string $judul
+ * @property CarbonImmutable $tanggal
+ * @property string|null $file_warta
+ */
 class WartaJemaat extends Model
 {
-    use HasFactory, MembersihkanBerkas, MenyegarkanCacheKonten;
+    use HasFactory, MembersihkanBerkas, MencatatAktivitas, MenyegarkanCacheKonten;
 
     protected $fillable = ['judul', 'tanggal', 'file_warta'];
 

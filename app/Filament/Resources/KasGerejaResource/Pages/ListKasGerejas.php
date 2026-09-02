@@ -14,6 +14,14 @@ class ListKasGerejas extends ListRecords
     {
         return [
             Actions\CreateAction::make(),
+            Actions\Action::make('laporan')
+                ->label('Laporan Cetak/PDF')
+                ->icon('heroicon-o-printer')
+                ->url(route('admin.kas.laporan'), shouldOpenInNewTab: true),
+            Actions\Action::make('csv')
+                ->label('Ekspor CSV')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->url(route('admin.kas.csv')),
         ];
     }
 }

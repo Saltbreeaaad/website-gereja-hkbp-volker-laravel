@@ -16,7 +16,7 @@
 --}}
 
 @php
-    $gaya = 'inline-flex items-center justify-center w-11 h-11 rounded-xl border border-slate-300 bg-white text-hkbp-900 transition-colors hover:border-hkbp-800 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-hkbp-800';
+    $gaya = 'inline-flex items-center justify-center w-11 h-11 rounded-xl border border-slate-200 bg-white text-hkbp-900 shadow-brand-sm transition-all duration-200 hover:border-hkbp-800 hover:bg-hkbp-900 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-hkbp-800';
 @endphp
 
 <div class="flex items-center justify-center gap-2 mt-4">

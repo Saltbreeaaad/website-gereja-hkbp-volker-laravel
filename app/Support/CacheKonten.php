@@ -50,9 +50,16 @@ final class CacheKonten
     /** Enam jam: cukup lama untuk berguna, cukup pendek sebagai jaring pengaman. */
     public const TTL = 6 * 3600;
 
-    public static function ingat(string $kunci, Closure $isi, ?int $detik = null): mixed
+    /**
+     * Kunci `null` berarti "jangan simpan" — pemanggil boleh memutuskan bahwa
+     * hasil tertentu tidak layak masuk cache bersama. Dipakai untuk hasil yang
+     * kuncinya ikut menyertakan masukan pengunjung: tanpa jalan keluar ini,
+     * setiap kata pencarian acak menulis satu baris cache baru yang bertahan
+     * enam jam, dan siapa pun dapat menggelembungkan tabel cache sesukanya.
+     */
+    public static function ingat(?string $kunci, Closure $isi, ?int $detik = null): mixed
     {
-        if (! config('gereja.cache_konten')) {
+        if ($kunci === null || ! config('gereja.cache_konten')) {
             return $isi();
         }
 
@@ -72,7 +79,7 @@ final class CacheKonten
      * @param  Closure(): EloquentCollection<int, TModel>  $kueri
      * @return EloquentCollection<int, TModel>
      */
-    public static function ingatModel(string $kunci, string $model, Closure $kueri, ?int $detik = null): EloquentCollection
+    public static function ingatModel(?string $kunci, string $model, Closure $kueri, ?int $detik = null): EloquentCollection
     {
         $baris = self::ingat(
             $kunci,
@@ -80,7 +87,10 @@ final class CacheKonten
             $detik,
         );
 
-        return $model::hydrate($baris);
+        /** @var EloquentCollection<int, TModel> $hasil */
+        $hasil = $model::hydrate($baris);
+
+        return $hasil;
     }
 
     /**
@@ -94,7 +104,7 @@ final class CacheKonten
      * @param  class-string<TModel>  $model
      * @param  Closure(): LengthAwarePaginator  $kueri
      */
-    public static function ingatHalaman(string $kunci, string $model, Closure $kueri, ?int $detik = null): LengthAwarePaginator
+    public static function ingatHalaman(?string $kunci, string $model, Closure $kueri, ?int $detik = null): LengthAwarePaginator
     {
         $tersimpan = self::ingat($kunci, function () use ($kueri): array {
             $halaman = $kueri();
@@ -109,8 +119,11 @@ final class CacheKonten
             ];
         }, $detik);
 
+        /** @var EloquentCollection<int, TModel> $baris */
+        $baris = $model::hydrate($tersimpan['baris']);
+
         return new LengthAwarePaginator(
-            $model::hydrate($tersimpan['baris']),
+            $baris,
             $tersimpan['total'],
             $tersimpan['per_halaman'],
             $tersimpan['halaman_kini'],

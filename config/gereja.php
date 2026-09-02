@@ -56,13 +56,46 @@ return [
     */
     'cache_konten' => (bool) env('GEREJA_CACHE_KONTEN', true),
 
+    /*
+     * Direktori cadangan basis data.
+     *
+     * Dapat diarahkan keluar dari pohon aplikasi lewat DIREKTORI_CADANGAN —
+     * cadangan yang tersimpan di dalam direktori yang ikut ditimpa saat
+     * penyebaran ulang bukanlah cadangan.
+     */
+    'direktori_cadangan' => env('DIREKTORI_CADANGAN', storage_path('app/backups')),
+
+    /*
+     * Batas piksel gambar yang boleh di-decode pengoptimal, atau null untuk
+     * menurunkannya sendiri dari memory_limit.
+     *
+     * Isi angka hanya bila hosting melaporkan memory_limit yang tidak
+     * mencerminkan jatah sebenarnya. Melebihi batas berarti gambarnya
+     * dilewati — berkas aslinya tetap dipakai, tidak ada yang hilang.
+     */
+    'maksimal_piksel_gambar' => env('MAKSIMAL_PIKSEL_GAMBAR') !== null ? (int) env('MAKSIMAL_PIKSEL_GAMBAR') : null,
+
+    /*
+     * Penyimpanan kedua untuk cadangan basis data.
+     *
+     * Isi dengan nama disk dari config/filesystems.php (mis. 's3') lewat
+     * CADANGAN_DISK. Dibiarkan kosong berarti cadangan hanya ada di disk yang
+     * sama dengan basis datanya — cukup untuk salah hapus, tidak cukup untuk
+     * kegagalan disk.
+     */
+    'cadangan_disk' => env('CADANGAN_DISK'),
+
+    'cadangan_disk_direktori' => env('CADANGAN_DISK_DIREKTORI', 'cadangan-basis-data'),
+
     'menu' => [
         ['route' => 'home', 'label' => 'Beranda'],
         ['route' => 'profil', 'label' => 'Profil'],
         ['route' => 'pelayan', 'label' => 'Pelayan'],
         ['route' => 'renungan', 'label' => 'Renungan'],
+        ['route' => 'agenda', 'label' => 'Agenda'],
         ['route' => 'warta', 'label' => 'Warta'],
         ['route' => 'galeri', 'label' => 'Galeri'],
+        ['route' => 'doa', 'label' => 'Doa'],
         ['route' => 'penggunaan-gereja', 'label' => 'Penggunaan Gereja'],
     ],
 

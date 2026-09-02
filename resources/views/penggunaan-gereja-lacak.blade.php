@@ -20,7 +20,7 @@
 
             {{-- FORMULIR PENELUSURAN --}}
             <form action="{{ route('penggunaan-gereja.lacak') }}" method="GET"
-                  class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 mb-8">
+                  class="bg-white rounded-2xl p-6 sm:p-8 shadow-brand border border-slate-200/80 mb-8">
                 <label for="kode" class="block font-bold text-hkbp-900 mb-1">Kode penelusuran</label>
                 <p class="text-sm text-slate-500 mb-4">Contoh: WG-A2B3C4D5. Huruf besar/kecil dan tanda hubung tidak masalah.</p>
 
@@ -36,10 +36,10 @@
                            spellcheck="false"
                            placeholder="WG-XXXXXXXX"
                            @if($tidakDitemukan) aria-describedby="kode-galat" aria-invalid="true" @endif
-                           class="flex-1 min-w-0 bg-slate-50 border rounded-xl px-4 py-3 text-sm pointer-coarse:text-base font-bold tracking-wider uppercase text-slate-800 focus:ring-2 focus:ring-hkbp-800 focus:border-hkbp-800 focus:outline-none {{ $tidakDitemukan ? 'border-red-400' : 'border-slate-300' }}">
+                           class="flex-1 min-w-0 bg-slate-50 border rounded-xl px-4 py-3 text-sm pointer-coarse:text-base font-bold tracking-wider uppercase text-slate-800 focus:ring-2 focus:ring-hkbp-800/40 focus:border-hkbp-800 focus:bg-white focus:outline-none transition-colors {{ $tidakDitemukan ? 'border-red-400' : 'border-slate-200 hover:border-slate-300' }}">
 
                     <button type="submit"
-                            class="shrink-0 inline-flex items-center justify-center gap-2 min-h-11 bg-hkbp-800 hover:bg-hkbp-900 text-white text-sm font-bold px-6 rounded-xl transition-colors">
+                            class="shrink-0 inline-flex items-center justify-center gap-2 min-h-11 bg-linear-to-b from-hkbp-800 to-hkbp-900 hover:from-hkbp-700 hover:to-hkbp-800 text-white text-sm font-bold px-6 rounded-xl shadow-brand-sm transition-all duration-200">
                         <i data-lucide="search" class="w-4 h-4" aria-hidden="true"></i> Cek Status
                     </button>
                 </div>
@@ -65,7 +65,7 @@
                     };
                 @endphp
 
-                <article class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <article class="bg-white rounded-2xl shadow-brand border border-slate-200/80 overflow-hidden">
                     <header class="{{ $gaya['bg'] }} border-b {{ $gaya['garis'] }} px-6 sm:px-8 py-5">
                         <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Status permohonan</p>
                         <p class="flex items-center gap-2 text-xl font-black {{ $gaya['teks'] }}">
@@ -107,7 +107,7 @@
                         {{-- Catatan pengurus. Inilah kolom yang dulu diisi admin di panel
                              tetapi tidak pernah sampai ke pemohon mana pun. --}}
                         @if($permohonan->catatan_admin)
-                            <div class="mt-6 bg-slate-50 border border-slate-200 rounded-xl p-4">
+                            <div class="mt-6 bg-slate-50 border border-slate-200/80 rounded-xl p-4">
                                 <h2 class="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">
                                     <i data-lucide="inbox" class="w-4 h-4" aria-hidden="true"></i> Catatan dari pengurus
                                 </h2>

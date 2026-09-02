@@ -1,0 +1,23 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app
+        - config
+        - database
+        - routes
+        - tests
+
+    # Level 5 sebagai titik awal yang jujur: cukup ketat untuk menangkap
+    # kesalahan tipe dan pemanggilan metode yang tidak ada, tetapi belum
+    # menuntut anotasi generic di setiap relasi Eloquent. Naikkan bertahap.
+    level: 5
+
+    # Stub Laravel menyatakan beberapa properti non-nullable padahal di runtime
+    # bisa null — `Seeder::$command` yang kosong saat seeder dijalankan di luar
+    # konsol adalah contohnya. Tanpa setelan ini, penjagaan `?->` yang benar
+    # justru dilaporkan sebagai berlebihan, sehingga yang "diperbaiki" malah
+    # kode yang sudah benar. Setelan ini yang direkomendasikan PHPStan sendiri
+    # untuk keadaan tersebut, dan berlaku menyeluruh — bukan menutup satu galat.
+    treatPhpDocTypesAsCertain: false

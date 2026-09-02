@@ -95,11 +95,31 @@ try {
 
     if (Port-Terbuka $port) {
         Write-Host '        sudah ada yang mendengarkan; dipakai apa adanya.'
+        Write-Host '        [!] Server ini tidak dinyalakan oleh skrip ini, jadi APP_DEBUG-nya' -ForegroundColor Yellow
+        Write-Host '            tidak dapat dipastikan mati. Tutup server itu lalu jalankan' -ForegroundColor Yellow
+        Write-Host '            ulang bila alamatnya akan dibagikan ke luar.' -ForegroundColor Yellow
     }
     else {
+        # APP_DEBUG dimatikan untuk proses ini.
+        #
+        # Skrip ini membuka situs ke internet lewat Cloudflare Tunnel, sementara
+        # .env pengembangan berisi APP_DEBUG=true. Satu galat saja pada alamat
+        # publik itu akan menampilkan halaman Ignition lengkap kepada siapa pun
+        # yang memegang tautannya: jejak tumpukan, potongan kode, dan seluruh
+        # daftar variabel lingkungan — termasuk DB_PASSWORD dan APP_KEY.
+        #
+        # Diberikan sebagai variabel lingkungan proses, bukan dengan menyunting
+        # .env: Dotenv Laravel bersifat immutable dan tidak menimpa nilai yang
+        # sudah ada di lingkungan, jadi yang ini menang tanpa berkasnya berubah
+        # dan tanpa ada yang perlu diingat untuk dikembalikan nanti.
+        $debugSebelumnya = $env:APP_DEBUG
+        $env:APP_DEBUG = 'false'
+
         $prosesServer = Start-Process -FilePath $php `
             -ArgumentList 'artisan', 'serve', "--port=$port" `
             -WorkingDirectory $akar -WindowStyle Hidden -PassThru
+
+        $env:APP_DEBUG = $debugSebelumnya
 
         $siap = $false
         foreach ($i in 1..40) {

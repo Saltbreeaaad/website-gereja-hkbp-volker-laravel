@@ -58,6 +58,17 @@ class KasGerejaResource extends Resource
                     ->minValue(1)
                     ->rules(['integer', 'min:1'])
                     ->helperText('Masukkan angka positif. Jenis transaksi menentukan pemasukan atau pengeluaran.'),
+
+                Forms\Components\FileUpload::make('bukti')
+                    ->label('Bukti Transaksi (opsional)')
+                    ->disk('local')
+                    ->directory('bukti-kas')
+                    ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png', 'image/webp'])
+                    ->maxSize(5120)
+                    ->downloadable()
+                    ->openable()
+                    ->helperText('PDF, JPG, PNG, atau WebP; maksimal 5 MB. Tersimpan privat dan hanya dapat dibuka pengurus.')
+                    ->columnSpanFull(),
             ]);
     }
 
@@ -71,9 +82,15 @@ class KasGerejaResource extends Resource
 
                 Tables\Columns\TextColumn::make('jenis')
                     ->badge()
+                    // `default` wajib ada. Tanpa arm itu, satu baris berjenis
+                    // apa pun di luar kedua nilai ini — hasil impor cadangan,
+                    // suntingan SQL langsung, atau nilai baru yang ditambahkan
+                    // nanti — melempar UnhandledMatchError dan merobohkan
+                    // seluruh halaman kas, bukan sekadar satu selnya.
                     ->color(fn (string $state): string => match ($state) {
                         'Pemasukan' => 'success',
                         'Pengeluaran' => 'danger',
+                        default => 'gray',
                     })
                     ->searchable(),
 
@@ -88,6 +105,11 @@ class KasGerejaResource extends Resource
                             ->label('Total')
                             ->money('IDR', locale: 'id')
                     ),
+
+                Tables\Columns\IconColumn::make('bukti')
+                    ->label('Bukti')
+                    ->boolean()
+                    ->getStateUsing(fn (KasGereja $record): bool => filled($record->bukti)),
             ])
             ->defaultSort('tanggal', 'desc')
             ->filters([

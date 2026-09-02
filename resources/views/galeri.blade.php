@@ -10,12 +10,29 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <x-filter-tahun rute="galeri" :tahun="$tahun" :tersedia="$tahunTersedia" label="Tahun kegiatan" />
 
+            <form action="{{ route('galeri') }}" method="GET" class="mb-8 grid sm:grid-cols-[1fr_12rem_auto] gap-3">
+                @if($tahun)<input type="hidden" name="tahun" value="{{ $tahun }}">@endif
+                <label for="cari-galeri" class="sr-only">Cari foto</label>
+                <input id="cari-galeri" name="q" value="{{ $cari }}" maxlength="60" placeholder="Cari kegiatan…"
+                       class="min-w-0 min-h-11 rounded-xl border border-slate-300 bg-white px-4 text-base focus:outline-none focus:ring-2 focus:ring-hkbp-800/30 focus:border-hkbp-800">
+                <label for="kategori" class="sr-only">Kategori galeri</label>
+                <select id="kategori" name="kategori" class="min-h-11 rounded-xl border border-slate-300 bg-white px-4 text-slate-700 focus:outline-none focus:ring-2 focus:ring-hkbp-800/30">
+                    <option value="">Semua kategori</option>
+                    @foreach($kategoriTersedia as $opsi)
+                        <option value="{{ $opsi }}" @selected($kategori === $opsi)>{{ $opsi }}</option>
+                    @endforeach
+                </select>
+                <button class="min-h-11 px-5 rounded-xl bg-hkbp-800 text-white font-bold text-sm inline-flex justify-center items-center gap-2 hover:bg-hkbp-900">
+                    <i data-lucide="search" class="w-4 h-4" aria-hidden="true"></i> Cari
+                </button>
+            </form>
+
             <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 @forelse($galeris as $item)
-                    @php $url = $item->foto ? Storage::disk('public')->url($item->foto) : null @endphp
+                    @php $url = $item->urlFoto() @endphp
 
-                    <figure class="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200 flex flex-col group hover:shadow-xl transition-shadow duration-300">
-                        <div class="w-full h-64 overflow-hidden relative bg-slate-100 border-b border-slate-200">
+                    <figure class="bg-white rounded-2xl overflow-hidden shadow-brand-sm border border-slate-200/80 flex flex-col group hover:shadow-brand-lg hover:-translate-y-1 transition-all duration-300">
+                        <div class="w-full h-64 overflow-hidden relative bg-slate-100 border-b border-slate-200/80">
                             @if($url)
                                 {{-- Tombol, bukan div: foto bisa diperbesar lewat keyboard maupun sentuh. --}}
                                 <button type="button"
@@ -23,6 +40,7 @@
                                         data-lightbox-caption="{{ $item->judul }}"
                                         class="w-full h-full block cursor-zoom-in fokus-dalam">
                                     <img src="{{ $url }}"
+                                         @if($srcset = $item->srcsetFoto()) srcset="{{ $srcset }}" sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" @endif
                                          alt="{{ $item->judul }}"
                                          width="600" height="256"
                                          loading="{{ $loop->index < 3 ? 'eager' : 'lazy' }}"
@@ -49,6 +67,7 @@
                                 <i data-lucide="calendar" class="w-3.5 h-3.5" aria-hidden="true"></i>
                                 <time datetime="{{ $item->tanggal->toDateString() }}">{{ $item->tanggal->translatedFormat('d F Y') }}</time>
                             </p>
+                            <p class="text-[11px] font-bold text-hkbp-700 uppercase tracking-wide mb-2">{{ $item->kategori }}</p>
                             <h2 class="text-hkbp-900 font-bold text-xl leading-snug text-balance group-hover:text-hkbp-700 transition-colors">{{ $item->judul }}</h2>
                         </figcaption>
                     </figure>
@@ -56,10 +75,10 @@
                     <div class="col-span-full">
                         <x-empty-state
                             ikon="camera"
-                            :judul="$tahun ? 'Tidak ada foto pada tahun ' . $tahun : 'Galeri masih kosong'"
-                            :pesan="$tahun
+                            :judul="($cari || $kategori) ? 'Foto tidak ditemukan' : ($tahun ? 'Tidak ada foto pada tahun ' . $tahun : 'Galeri masih kosong')"
+                            :pesan="($cari || $kategori) ? 'Coba pencarian atau kategori yang berbeda.' : ($tahun
                                 ? 'Belum ada dokumentasi kegiatan pada tahun tersebut.'
-                                : 'Belum ada foto kegiatan yang diunggah. Silakan kembali lagi nanti.'">
+                                : 'Belum ada foto kegiatan yang diunggah. Silakan kembali lagi nanti.')">
                             @if($tahun)
                                 <a href="{{ route('galeri') }}"
                                    class="inline-flex items-center justify-center min-h-11 gap-2 bg-hkbp-800 hover:bg-hkbp-900 text-white text-sm font-bold px-5 rounded-xl transition-colors">
@@ -73,7 +92,11 @@
 
             @if($galeris->hasPages())
                 <nav class="mt-10" aria-label="Navigasi halaman galeri">
-                    {{ $galeris->links() }}
+                    {{-- Livewire mengganti view paginasi global saat panel admin
+                         dirender. Pilih view publik secara eksplisit agar tautan
+                         tetap berupa <a> biasa dan tidak berubah menjadi tombol
+                         wire:click yang tidak bekerja di halaman publik. --}}
+                    {{ $galeris->links('vendor.pagination.tailwind') }}
                 </nav>
             @endif
         </div>

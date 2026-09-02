@@ -107,6 +107,17 @@ class AntarmukaTest extends TestCase
     }
 
     #[Test]
+    public function halaman_statis_tidak_mengunduh_modul_widget_yang_tidak_dipakai(): void
+    {
+        // Swiper dan Chart.js diimpor dinamis oleh app.js. Prefetch global akan
+        // mengunduh keduanya juga di halaman statis dan meniadakan lazy-load.
+        $isi = $this->get(route('profil'))->assertOk()->getContent();
+
+        $this->assertStringNotContainsString('vendor-swiper', $isi);
+        $this->assertStringNotContainsString('vendor-chart', $isi);
+    }
+
+    #[Test]
     public function tidak_ada_teks_berkontras_rendah_yang_tersisa(): void
     {
         Galeri::factory()->create();

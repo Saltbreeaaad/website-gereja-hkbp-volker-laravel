@@ -27,14 +27,14 @@
     // — terukur di Brave pada viewport 740x360.
     // py-3 menjaga tinggi bidang sentuh di atas 44px (WCAG 2.5.5).
     $kelasInput = 'w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm pointer-coarse:text-base text-slate-800 '
-        .'focus:ring-2 focus:outline-none transition-colors '
+        .'focus:ring-2 focus:ring-offset-0 focus:outline-none focus:bg-white transition-colors duration-200 '
         .($adaError
             ? 'border-red-400 focus:ring-red-500 focus:border-red-500'
-            : 'border-slate-300 focus:ring-hkbp-800 focus:border-hkbp-800');
+            : 'border-slate-200 focus:ring-hkbp-800/40 focus:border-hkbp-800 hover:border-slate-300');
 @endphp
 
 <div>
-    <label for="{{ $nama }}" class="block text-xs font-semibold text-slate-500 mb-1.5">
+    <label for="{{ $nama }}" class="block text-xs font-bold text-slate-500 tracking-wide uppercase mb-1.5">
         {{ $label }}
         @if($wajib)
             <span class="text-red-600" aria-hidden="true">*</span>

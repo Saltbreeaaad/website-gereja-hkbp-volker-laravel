@@ -2,12 +2,15 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\MemakaiHoneypot;
 use App\Models\PenggunaanGereja;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
 class StorePenggunaanGerejaRequest extends FormRequest
 {
+    use MemakaiHoneypot;
+
     public function authorize(): bool
     {
         return true;
@@ -15,7 +18,9 @@ class StorePenggunaanGerejaRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
+        // Honeypot: tersembunyi dari manusia, lazim diisi bot yang mencoba
+        // mengisi semua input formulir secara otomatis.
+        return $this->aturanHoneypot() + [
             'nama_kegiatan' => ['required', 'string', 'max:255'],
             'nama_pemohon' => ['required', 'string', 'max:255'],
             'kontak' => ['required', 'string', 'max:50', 'regex:/^[0-9+()\-\s]{8,}$/'],

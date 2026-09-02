@@ -14,6 +14,7 @@ class GaleriFactory extends Factory
     {
         return [
             'judul' => $this->faker->sentence(3),
+            'kategori' => 'Umum',
             'foto' => null,
             'tanggal' => today(),
         ];

@@ -7,7 +7,9 @@ use App\Models\PenggunaanGereja;
 use Filament\Notifications\Actions\Action;
 use Filament\Notifications\Notification as FilamentNotification;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
+use Illuminate\Queue\SerializesModels;
 
 /**
  * Beri tahu pengurus bahwa ada permohonan pemakaian gedung yang masuk.
@@ -16,10 +18,16 @@ use Illuminate\Notifications\Notification;
  * notifikasi database lewat lonceng di kanan atas, dan itu bekerja tanpa
  * konfigurasi SMTP apa pun. Menambah saluran `mail` cukup dengan menambah
  * 'mail' pada via() setelah kredensial SMTP gereja tersedia.
+ *
+ * Diantre. Pemicunya adalah formulir publik, dan `Notification::send()`
+ * yang berjalan langsung memuat seluruh akun pengurus lalu menulis satu
+ * baris notifikasi per orang sebelum pemohon menerima balasannya —
+ * pekerjaan yang tidak ada hubungannya dengan apa yang ia tunggu.
+ * Membutuhkan `queue:work`, yang dijadwalkan di routes/console.php.
  */
-class PermohonanGedungMasuk extends Notification
+class PermohonanGedungMasuk extends Notification implements ShouldQueue
 {
-    use Queueable;
+    use Queueable, SerializesModels;
 
     public function __construct(private readonly PenggunaanGereja $permohonan) {}
 

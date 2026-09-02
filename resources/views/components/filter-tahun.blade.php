@@ -15,9 +15,9 @@
 --}}
 @if(count($tersedia) > 1)
     @php
-        $dasar = 'inline-flex items-center min-h-11 px-4 rounded-xl border text-sm font-bold transition-colors';
-        $aktif = $dasar . ' bg-hkbp-800 border-hkbp-800 text-white';
-        $mati = $dasar . ' bg-white border-slate-300 text-slate-700 hover:border-hkbp-800 hover:text-hkbp-900';
+        $dasar = 'inline-flex items-center min-h-11 px-4 rounded-xl border text-sm font-bold transition-all duration-200';
+        $aktif = $dasar . ' bg-linear-to-br from-hkbp-800 to-hkbp-900 border-hkbp-900 text-white shadow-brand-sm';
+        $mati = $dasar . ' bg-white border-slate-200 text-slate-600 hover:border-hkbp-800 hover:text-hkbp-900 hover:-translate-y-0.5';
     @endphp
 
     <nav aria-label="Saring menurut tahun" {{ $attributes->merge(['class' => 'mb-10']) }}>

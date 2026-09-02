@@ -3,6 +3,8 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Widgets\RingkasanGereja;
+use App\Filament\Widgets\StatusCadangan;
+use App\Http\Middleware\PastikanTwoFactorTerverifikasi;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -41,6 +43,7 @@ class AdminPanelProvider extends PanelProvider
                 'Ibadah & Renungan',
                 'Jemaat',
                 'Dokumentasi',
+                'Komunikasi',
                 'Administrasi',
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
@@ -51,6 +54,7 @@ class AdminPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
                 RingkasanGereja::class,
+                StatusCadangan::class,
                 Widgets\AccountWidget::class,
             ])
             ->middleware([
@@ -66,6 +70,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
+                PastikanTwoFactorTerverifikasi::class,
             ]);
     }
 }

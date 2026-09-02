@@ -184,6 +184,13 @@ class PenggunaanGerejaResource extends Resource
                     ->requiresConfirmation()
                     ->action(fn (PenggunaanGereja $record) => $record->update(['status' => PenggunaanGereja::DITOLAK])),
 
+                Tables\Actions\Action::make('hubungi')
+                    ->label('Kirim Status')
+                    ->icon('heroicon-o-chat-bubble-left-right')
+                    ->color('info')
+                    ->url(fn (PenggunaanGereja $record): ?string => $record->urlWhatsAppStatus(), shouldOpenInNewTab: true)
+                    ->visible(fn (PenggunaanGereja $record): bool => $record->urlWhatsAppStatus() !== null),
+
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
@@ -196,7 +203,9 @@ class PenggunaanGerejaResource extends Resource
 
     public static function getRelations(): array
     {
-        return [];
+        return [
+            PenggunaanGerejaResource\RelationManagers\RiwayatStatusRelationManager::class,
+        ];
     }
 
     public static function getNavigationBadge(): ?string

@@ -1,7 +1,7 @@
 <x-layout
     :title="($renungan?->judul ? $renungan->judul . ' - Renungan' : 'Renungan Harian') . ' - ' . config('gereja.nama')"
     :description="$renungan?->ringkasan(160) ?: 'Renungan harian dan santapan rohani dari ' . config('gereja.nama') . '.'"
-    :image="$renungan?->foto ? Storage::disk('public')->url($renungan->foto) : null">
+    :image="$renungan?->urlFoto()">
 
     <x-page-hero
         ringkas
@@ -15,9 +15,10 @@
                 {{-- ISI RENUNGAN --}}
                 <div class="lg:col-span-2">
                     @if($renungan)
-                        <article class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        <article class="bg-white rounded-2xl shadow-brand border border-slate-200/80 overflow-hidden">
                             @if($renungan->foto)
-                                <img src="{{ Storage::disk('public')->url($renungan->foto) }}"
+                                <img src="{{ $renungan->urlFoto() }}"
+                                     @if($srcset = $renungan->srcsetFoto()) srcset="{{ $srcset }}" sizes="(min-width: 1024px) 66vw, 100vw" @endif
                                      alt="Ilustrasi renungan: {{ $renungan->judul }}"
                                      width="900" height="480" fetchpriority="high" decoding="async"
                                      class="w-full h-72 sm:h-96 object-cover">
@@ -25,7 +26,7 @@
 
                             <div class="p-6 sm:p-10">
                                 <div class="flex flex-wrap items-center gap-3 text-xs sm:text-sm font-bold mb-4">
-                                    <span class="flex items-center gap-1.5 bg-blue-50 text-hkbp-800 px-3 py-1.5 rounded-lg border border-blue-100">
+                                    <span class="flex items-center gap-1.5 bg-blue-50 text-hkbp-800 px-3 py-1.5 rounded-lg ring-1 ring-inset ring-blue-100">
                                         <i data-lucide="calendar" class="w-4 h-4" aria-hidden="true"></i>
                                         <time datetime="{{ $renungan->tanggal->toDateString() }}">{{ $renungan->tanggal->translatedFormat('l, d F Y') }}</time>
                                     </span>
@@ -39,6 +40,17 @@
 
                                 <div class="text-slate-700 leading-relaxed space-y-4 text-base sm:text-lg">
                                     {!! nl2br(e($renungan->isi)) !!}
+                                </div>
+
+                                <div class="mt-8 pt-6 border-t border-slate-100 flex flex-wrap gap-3" data-no-print>
+                                    <button type="button" data-share-url="{{ url()->current() }}" data-share-title="{{ $renungan->judul }}"
+                                            class="inline-flex items-center gap-2 min-h-11 px-4 rounded-xl bg-hkbp-800 hover:bg-hkbp-900 text-white text-sm font-bold">
+                                        <i data-lucide="share-2" class="w-4 h-4" aria-hidden="true"></i>
+                                        <span data-share-label>Bagikan renungan</span>
+                                    </button>
+                                    <a href="{{ route('renungan.arsip') }}" class="inline-flex items-center gap-2 min-h-11 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold">
+                                        <i data-lucide="search" class="w-4 h-4" aria-hidden="true"></i> Cari arsip
+                                    </a>
                                 </div>
                             </div>
                         </article>
@@ -60,7 +72,7 @@
                              class="mt-6 grid sm:grid-cols-2 gap-4">
                             @if($sebelumnya)
                                 <a href="{{ route('renungan', ['tanggal' => $sebelumnya->tanggal->toDateString()]) }}"
-                                   class="group bg-white border border-slate-200 rounded-2xl p-4 hover:border-hkbp-800 transition-colors">
+                                   class="group bg-white border border-slate-200/80 shadow-brand-sm rounded-2xl p-4 hover:border-hkbp-800 hover:shadow-brand hover:-translate-y-0.5 transition-all duration-300">
                                     <span class="flex items-center gap-1.5 text-[11px] font-bold text-slate-500 uppercase tracking-wide">
                                         <i data-lucide="chevron-left" class="w-3.5 h-3.5" aria-hidden="true"></i> Edisi sebelumnya
                                     </span>
@@ -73,7 +85,7 @@
 
                             @if($berikutnya)
                                 <a href="{{ route('renungan', ['tanggal' => $berikutnya->tanggal->toDateString()]) }}"
-                                   class="group bg-white border border-slate-200 rounded-2xl p-4 hover:border-hkbp-800 transition-colors sm:text-right">
+                                   class="group bg-white border border-slate-200/80 shadow-brand-sm rounded-2xl p-4 hover:border-hkbp-800 hover:shadow-brand hover:-translate-y-0.5 transition-all duration-300 sm:text-right">
                                     <span class="flex items-center gap-1.5 text-[11px] font-bold text-slate-500 uppercase tracking-wide sm:justify-end">
                                         Edisi berikutnya <i data-lucide="chevron-right" class="w-3.5 h-3.5" aria-hidden="true"></i>
                                     </span>
@@ -88,7 +100,7 @@
                 {{-- SIDEBAR --}}
                 <aside class="space-y-6 lg:sticky lg:top-28" data-no-print>
 
-                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                    <div class="bg-white rounded-2xl p-6 shadow-brand-sm border border-slate-200/80">
                         <div class="flex items-center justify-between mb-4 gap-3">
                             <h2 class="font-black text-hkbp-900 text-base flex items-center gap-2">
                                 <i data-lucide="calendar-days" class="w-5 h-5 text-gold-700" aria-hidden="true"></i> Pilih Tanggal
@@ -107,15 +119,15 @@
                                        {{-- text-base di perangkat sentuh: font < 16px membuat iOS Safari
                                             memperbesar halaman saat input difokus. Patokannya jenis
                                             penunjuk, bukan lebar layar — lihat x-field. --}}
-                                       class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-sm pointer-coarse:text-base font-bold text-slate-800 focus:ring-2 focus:ring-hkbp-800 focus:border-hkbp-800 focus:outline-none cursor-pointer">
+                                       class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm pointer-coarse:text-base font-bold text-slate-800 focus:ring-2 focus:ring-hkbp-800/40 focus:border-hkbp-800 focus:bg-white focus:outline-none cursor-pointer hover:border-slate-300 transition-colors">
                             </div>
-                            <button type="submit" class="w-full min-h-11 bg-hkbp-800 hover:bg-hkbp-900 text-white text-xs font-bold rounded-xl transition-colors flex items-center justify-center gap-2">
+                            <button type="submit" class="w-full min-h-11 bg-linear-to-b from-hkbp-800 to-hkbp-900 hover:from-hkbp-700 hover:to-hkbp-800 text-white text-xs font-bold rounded-xl shadow-brand-sm transition-all duration-200 flex items-center justify-center gap-2">
                                 <i data-lucide="search" class="w-4 h-4" aria-hidden="true"></i> Tampilkan Renungan
                             </button>
                         </form>
                     </div>
 
-                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                    <div class="bg-white rounded-2xl p-6 shadow-brand-sm border border-slate-200/80">
                         <h2 class="font-black text-hkbp-900 text-base mb-4 flex items-center gap-2">
                             <i data-lucide="sparkles" class="w-5 h-5 text-gold-700" aria-hidden="true"></i> Edisi Lainnya
                         </h2>

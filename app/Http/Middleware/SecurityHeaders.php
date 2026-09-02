@@ -26,7 +26,7 @@ class SecurityHeaders
     public function handle(Request $request, Closure $next): Response
     {
         // Dibuat sebelum view dirender supaya tag <script> hasil @vite, skrip
-        // prefetch Vite, dan blok JSON-LD di layout memakai nonce yang sama
+        // Vite, dan blok JSON-LD di layout memakai nonce yang sama
         // dengan yang diumumkan di header.
         Vite::useCspNonce();
 

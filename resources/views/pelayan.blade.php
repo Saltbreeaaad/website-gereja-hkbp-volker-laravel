@@ -9,8 +9,9 @@
     {{-- PENDETA --}}
     <section class="py-16 bg-white" aria-labelledby="judul-pendeta">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="border-b-2 border-gold-500 pb-2 mb-10 inline-block">
-                <h2 id="judul-pendeta" class="text-3xl font-extrabold text-hkbp-900">Pendeta</h2>
+            <div class="flex items-center gap-3 mb-10">
+                <span class="w-10 h-10 rounded-lg bg-linear-to-br from-hkbp-800 to-hkbp-950 flex items-center justify-center text-gold-400 shadow-brand-sm"><i data-lucide="user" class="w-5 h-5" aria-hidden="true"></i></span>
+                <h2 id="judul-pendeta" class="text-2xl sm:text-3xl font-extrabold text-hkbp-900">Pendeta</h2>
             </div>
 
             <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -26,14 +27,15 @@
     </section>
 
     {{-- PARHALADO --}}
-    <section class="py-16 bg-slate-50 border-t border-slate-200" aria-labelledby="judul-parhalado">
+    <section class="py-16 bg-slate-50 border-t border-slate-100" aria-labelledby="judul-parhalado">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="border-b-2 border-gold-500 pb-2 mb-2 inline-block">
-                <h2 id="judul-parhalado" class="text-3xl font-extrabold text-hkbp-900">Parhalado (Majelis Jemaat)</h2>
+            <div class="flex items-center gap-3 mb-2">
+                <span class="w-10 h-10 rounded-lg bg-linear-to-br from-hkbp-800 to-hkbp-950 flex items-center justify-center text-gold-400 shadow-brand-sm"><i data-lucide="user" class="w-5 h-5" aria-hidden="true"></i></span>
+                <h2 id="judul-parhalado" class="text-2xl sm:text-3xl font-extrabold text-hkbp-900">Parhalado (Majelis Jemaat)</h2>
             </div>
 
             @forelse($parhalado as $bidang => $anggota)
-                <h3 class="text-xl font-bold text-hkbp-800 border-l-4 border-gold-500 pl-3 mt-10 mb-6">{{ $bidang ?: 'Umum / Lainnya' }}</h3>
+                <h3 class="text-xl font-bold text-hkbp-800 border-l-4 border-gold-500 pl-3 bg-linear-to-r from-slate-50 to-transparent py-1 mt-10 mb-6">{{ $bidang ?: 'Umum / Lainnya' }}</h3>
 
                 <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     @foreach($anggota as $person)
@@ -49,14 +51,15 @@
     </section>
 
     {{-- PENGURUS KATEGORIAL --}}
-    <section class="py-16 bg-white border-t border-slate-200" aria-labelledby="judul-kategorial">
+    <section class="py-16 bg-white border-t border-slate-100" aria-labelledby="judul-kategorial">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="border-b-2 border-gold-500 pb-2 mb-2 inline-block">
-                <h2 id="judul-kategorial" class="text-3xl font-extrabold text-hkbp-900">Pengurus Kategorial</h2>
+            <div class="flex items-center gap-3 mb-2">
+                <span class="w-10 h-10 rounded-lg bg-linear-to-br from-hkbp-800 to-hkbp-950 flex items-center justify-center text-gold-400 shadow-brand-sm"><i data-lucide="user" class="w-5 h-5" aria-hidden="true"></i></span>
+                <h2 id="judul-kategorial" class="text-2xl sm:text-3xl font-extrabold text-hkbp-900">Pengurus Kategorial</h2>
             </div>
 
             @forelse($kategorial as $bidang => $anggota)
-                <h3 class="text-xl font-bold text-hkbp-800 border-l-4 border-gold-500 pl-3 mt-10 mb-6">{{ $bidang ?: 'Umum / Lainnya' }}</h3>
+                <h3 class="text-xl font-bold text-hkbp-800 border-l-4 border-gold-500 pl-3 bg-linear-to-r from-slate-50 to-transparent py-1 mt-10 mb-6">{{ $bidang ?: 'Umum / Lainnya' }}</h3>
 
                 <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     @foreach($anggota as $person)

@@ -1,0 +1,66 @@
+name: CI
+
+# Menjalankan pemeriksaan yang sama dengan yang dijalankan di mesin pengembang,
+# supaya "hijau di laptop saya" berhenti menjadi satu-satunya bukti.
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  periksa:
+    name: Uji, gaya, dan analisis statis
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Siapkan PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          # intl WAJIB: filament/support mensyaratkannya, dan tanpanya SETIAP
+          # halaman tabel Filament melempar RuntimeException dari Number::format().
+          # Itu pernah lolos sepenuhnya karena tidak ada tes yang me-render panel.
+          # gd dipakai pengoptimal gambar; zip & pdo_sqlite untuk composer dan tes.
+          extensions: intl, gd, zip, pdo_sqlite, sqlite3, mbstring
+          coverage: none
+
+      - name: Cache dependensi Composer
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+
+      - name: Pasang dependensi PHP
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Siapkan lingkungan
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Gaya penulisan (Pint)
+        run: ./vendor/bin/pint --test
+
+      - name: Analisis statis (Larastan)
+        run: ./vendor/bin/phpstan analyse --memory-limit=1G --no-progress
+
+      - name: Uji
+        run: php bin/phpunit.php
+
+  aset:
+    name: Build aset frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - run: npm ci --ignore-scripts
+      - run: npm run build

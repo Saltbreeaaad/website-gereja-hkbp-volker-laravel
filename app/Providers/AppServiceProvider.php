@@ -2,9 +2,10 @@
 
 namespace App\Providers;
 
+use Illuminate\Auth\Events\Login;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\URL;
-use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -27,7 +28,16 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
-        // Prefetch chunk Vite (swiper/chart/lucide) setelah halaman selesai dimuat.
-        Vite::prefetch(concurrency: 3);
+        // Setiap login baru harus melewati 2FA lagi.
+        //
+        // PastikanTwoFactorTerverifikasi menilai dari satu kunci sesi, dan kunci
+        // itu bertahan selama sesinya bertahan. Filament memang meng-invalidate
+        // sesi saat logout, tetapi itu berarti keamanan gerbang 2FA bergantung
+        // pada perilaku satu jalur keluar tertentu — jalur lain (sesi yang
+        // dipakai ulang, logout yang hanya melepas pengguna tanpa membuang
+        // sesinya) meninggalkan tanda "sudah terverifikasi" untuk login
+        // berikutnya. Membatalkannya pada peristiwa Login mengikat verifikasi
+        // ke sesi masuk yang bersangkutan, bukan ke cara seseorang keluar.
+        Event::listen(Login::class, fn () => session()->forget('two_factor_verified_user_id'));
     }
 }

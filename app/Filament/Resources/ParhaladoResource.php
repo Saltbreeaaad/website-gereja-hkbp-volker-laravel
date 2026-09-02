@@ -36,12 +36,21 @@ class ParhaladoResource extends Resource
 
                 Forms\Components\FileUpload::make('foto')
                     ->image()
+                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                    // Dimensi dibatasi, bukan hanya ukuran berkas. PNG 9000x9000
+                    // berisi bidang polos hanya seperempat megabita namun menuntut
+                    // ratusan megabita saat dibuka pengoptimal — dan kehabisan
+                    // memori di sana adalah fatal error yang tidak bisa ditangkap.
+                    // Ditolak di sini supaya pengurus mendapat pesan yang jelas,
+                    // bukan halaman 500 (lihat App\Support\PengoptimalGambar).
+                    ->rules(['dimensions:max_width=6000,max_height=6000'])
+                    ->validationMessages(['dimensions' => 'Dimensi gambar maksimal 6000 x 6000 piksel. Perkecil dulu sebelum diunggah.'])
                     ->disk('public')
                     ->directory('pelayan-photos')
                     ->imageEditor()
                     ->imageResizeMode('cover')
-                    ->imageResizeTargetWidth(800)
-                    ->imageResizeTargetHeight(1000)
+                    ->imageResizeTargetWidth('800')
+                    ->imageResizeTargetHeight('1000')
                     ->maxSize(2048)
                     ->helperText('Maksimal 2 MB. Foto potret paling rapi (rasio 4:5).')
                     ->columnSpanFull(),

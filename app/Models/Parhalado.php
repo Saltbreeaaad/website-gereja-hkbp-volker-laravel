@@ -3,15 +3,27 @@
 namespace App\Models;
 
 use App\Models\Concerns\MembersihkanBerkas;
+use App\Models\Concerns\MencatatAktivitas;
+use App\Models\Concerns\MengoptimalkanGambar;
 use App\Models\Concerns\MenyegarkanCacheKonten;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
+/**
+ * @property int $id
+ * @property string $nama
+ * @property string|null $foto
+ * @property string $kategori
+ * @property string|null $jabatan
+ * @property string|null $bidang
+ * @property string|null $keterangan
+ * @property string|null $telepon
+ */
 class Parhalado extends Model
 {
-    use HasFactory, MembersihkanBerkas, MenyegarkanCacheKonten;
+    use HasFactory, MembersihkanBerkas, MencatatAktivitas, MengoptimalkanGambar, MenyegarkanCacheKonten;
 
     public const KATEGORI = ['Pendeta', 'Parhalado', 'Kategorial'];
 
@@ -52,5 +64,10 @@ class Parhalado extends Model
     protected function kolomBerkas(): array
     {
         return ['foto'];
+    }
+
+    protected function kolomGambar(): array
+    {
+        return ['foto' => 800];
     }
 }

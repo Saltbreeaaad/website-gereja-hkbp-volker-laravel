@@ -3,14 +3,24 @@
 namespace App\Models;
 
 use App\Casts\JamHarian;
+use App\Models\Concerns\MencatatAktivitas;
 use App\Models\Concerns\MenyegarkanCacheKonten;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property int $id
+ * @property string $nama_ibadah
+ * @property CarbonImmutable $tanggal
+ * @property CarbonImmutable|null $waktu
+ * @property string|null $pelayan_firman
+ * @property string|null $keterangan
+ */
 class JadwalIbadah extends Model
 {
-    use HasFactory, MenyegarkanCacheKonten;
+    use HasFactory, MencatatAktivitas, MenyegarkanCacheKonten;
 
     protected $fillable = ['nama_ibadah', 'tanggal', 'waktu', 'pelayan_firman', 'keterangan'];
 

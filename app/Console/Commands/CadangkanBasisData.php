@@ -2,11 +2,11 @@
 
 namespace App\Console\Commands;
 
+use App\Support\PencadangMysql;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Symfony\Component\Process\Exception\ProcessFailedException;
-use Symfony\Component\Process\Process;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Cadangkan basis data ke berkas .sql.
@@ -38,7 +38,7 @@ class CadangkanBasisData extends Command
         }
 
         $konfigurasi = $koneksi->getConfig();
-        $direktori = storage_path('app/backups');
+        $direktori = config('gereja.direktori_cadangan', storage_path('app/backups'));
 
         if (! is_dir($direktori) && ! mkdir($direktori, 0755, recursive: true) && ! is_dir($direktori)) {
             $this->error("Tidak dapat membuat direktori {$direktori}.");
@@ -65,13 +65,12 @@ class CadangkanBasisData extends Command
 
         // Percobaan pertama memakai --single-transaction (dump konsisten tanpa
         // mengunci tabel). Bila akunnya tidak berprivilese cukup, dicoba lagi
-        // dengan penguncian tabel biasa — lihat catatan di bawah.
-        $galat = $this->jalankanDump($konfigurasi, $berkas, konsisten: true);
-
-        if ($galat !== null && $this->kurangPrivilese($galat)) {
-            $this->warn('Akun basis data tidak berprivilese RELOAD/FLUSH_TABLES; beralih ke penguncian tabel.');
-            $galat = $this->jalankanDump($konfigurasi, $berkas, konsisten: false);
-        }
+        // dengan penguncian tabel biasa — lihat App\Support\PencadangMysql.
+        $galat = PencadangMysql::jalankanDenganCadanganMode(
+            $konfigurasi,
+            $berkas,
+            fn (string $pesan) => $this->warn($pesan),
+        );
 
         if ($galat !== null) {
             // Berkas separuh jadi lebih berbahaya daripada tidak ada berkas:
@@ -87,70 +86,56 @@ class CadangkanBasisData extends Command
 
         $this->info(sprintf('Cadangan tersimpan: %s (%s).', $berkas, $this->ukuran($berkas)));
 
+        $this->salinKeLuar($berkas);
         $this->buangYangLama($direktori);
 
         return self::SUCCESS;
     }
 
     /**
-     * Jalankan mysqldump sekali. Mengembalikan null bila berhasil, atau pesan
-     * galatnya bila gagal.
+     * Salin cadangan ke penyimpanan kedua, bila dikonfigurasi.
      *
-     * `$konsisten` memilih di antara dua cara mendapatkan dump yang utuh:
+     * Cadangan yang tinggal satu disk dengan basis datanya bukan cadangan
+     * terhadap kegagalan disk — keduanya hilang bersamaan. Tujuannya dinyatakan
+     * lewat CADANGAN_DISK, memakai disk Laravel mana pun yang sudah ada di
+     * config/filesystems.php (S3, sebuah mount jaringan, atau apa pun yang
+     * dipasang gereja). Tanpa konfigurasi itu langkah ini tidak melakukan
+     * apa-apa, jadi pemasangan yang ada sekarang tidak berubah perilakunya.
      *
-     * - **true** — `--single-transaction`: membaca seluruh tabel dalam satu
-     *   snapshot transaksi, tanpa memblokir siapa pun. Ini yang diinginkan.
-     *   Sejak MySQL 8.0.32 mysqldump ikut menjalankan `FLUSH TABLES` di sini,
-     *   sehingga menuntut privilese RELOAD atau FLUSH_TABLES — dan itu tidak
-     *   diberikan ke akun aplikasi di shared hosting maupun di mesin
-     *   pengembangan proyek ini. Tidak ada flag untuk mematikan flush tersebut.
-     *
-     * - **false** — `--lock-tables` (bawaan mysqldump): mengunci tabel untuk
-     *   dibaca selama dump. Hanya butuh privilese LOCK TABLES, yang lazim
-     *   dimiliki pemilik basis data. Harganya: penulisan tertahan selama dump
-     *   berjalan. Untuk basis data sekecil ini, pada pukul 02.15, itu hitungan
-     *   detik.
-     *
-     * @param  array<string, mixed>  $konfigurasi
+     * Kegagalan menyalin sengaja tidak membuat perintahnya gagal: cadangan
+     * lokalnya sudah ada dan sah, dan menandai seluruh proses gagal hanya akan
+     * membuat hkbp:periksa-cadangan ikut berisik soal hal yang berbeda.
      */
-    private function jalankanDump(array $konfigurasi, string $berkas, bool $konsisten): ?string
+    private function salinKeLuar(string $berkas): void
     {
-        $proses = new Process(
-            [
-                'mysqldump',
-                '--host='.$konfigurasi['host'],
-                '--port='.$konfigurasi['port'],
-                '--user='.$konfigurasi['username'],
-                ...($konsisten ? ['--single-transaction', '--skip-lock-tables'] : []),
-                // Membaca INFORMATION_SCHEMA.FILES menuntut privilese PROCESS,
-                // yang juga tidak diberikan ke akun aplikasi biasa.
-                '--no-tablespaces',
-                '--quick',
-                '--default-character-set=utf8mb4',
-                '--result-file='.$berkas,
-                $konfigurasi['database'],
-            ],
-            // Kata sandi lewat variabel lingkungan, bukan opsi `-p`: opsi baris
-            // perintah terlihat oleh siapa pun yang menjalankan `ps`.
-            env: ['MYSQL_PWD' => (string) $konfigurasi['password']],
-            timeout: 600,
-        );
+        $disk = config('gereja.cadangan_disk');
+
+        if (blank($disk)) {
+            return;
+        }
 
         try {
-            $proses->mustRun();
+            $aliran = fopen($berkas, 'rb');
 
-            return null;
-        } catch (ProcessFailedException $e) {
-            return trim($proses->getErrorOutput() ?: $e->getMessage());
+            if ($aliran === false) {
+                $this->warn('Cadangan tidak dapat dibaca untuk disalin ke luar.');
+
+                return;
+            }
+
+            $tujuan = trim((string) config('gereja.cadangan_disk_direktori', 'cadangan-basis-data'), '/');
+            $berhasil = Storage::disk($disk)->put($tujuan.'/'.basename($berkas), $aliran);
+
+            if (is_resource($aliran)) {
+                fclose($aliran);
+            }
+
+            $berhasil
+                ? $this->info("Salinan luar terkirim ke disk [{$disk}].")
+                : $this->warn("Salinan luar ke disk [{$disk}] ditolak.");
+        } catch (\Throwable $e) {
+            $this->warn('Salinan luar gagal: '.$e->getMessage());
         }
-    }
-
-    /** Galat 1227 = privilese kurang; itulah yang bisa ditolong percobaan ulang. */
-    private function kurangPrivilese(string $galat): bool
-    {
-        return str_contains($galat, '1227')
-            || str_contains($galat, 'RELOAD')
-            || str_contains($galat, 'FLUSH_TABLES');
     }
 
     /**

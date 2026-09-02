@@ -14,7 +14,7 @@
                 {{-- min-w-0: tanpa ini grid item menolak menyusut di bawah min-content
                      dan mendorong halaman melebar di layar sempit. --}}
                 <div class="lg:col-span-2 lg:sticky lg:top-28 min-w-0">
-                    <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200">
+                    <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-brand border border-slate-200/80">
                         <h2 class="text-xl font-black text-hkbp-900 mb-1 flex items-center gap-2">
                             <i data-lucide="send" class="w-5 h-5 text-gold-700" aria-hidden="true"></i> Ajukan Permohonan
                         </h2>
@@ -45,6 +45,13 @@
                         <form action="{{ route('penggunaan-gereja.store') }}" method="POST" class="space-y-4">
                             @csrf
 
+                            {{-- Honeypot antispam. tabindex/autocomplete mencegahnya
+                                 mengganggu pengguna keyboard dan pengelola sandi. --}}
+                            <div class="absolute -left-[10000px] w-px h-px overflow-hidden" aria-hidden="true">
+                                <label for="website">Website</label>
+                                <input type="text" id="website" name="website" value="" tabindex="-1" autocomplete="off">
+                            </div>
+
                             <x-field nama="nama_kegiatan" label="Nama Kegiatan" wajib
                                      maxlength="255" placeholder="Cth: Latihan Koor Remaja" />
 
@@ -71,7 +78,7 @@
                             <x-field nama="keterangan" label="Keterangan (opsional)" tipe="textarea"
                                      maxlength="1000" placeholder="Info tambahan, jumlah peserta, dsb." />
 
-                            <button type="submit" class="w-full bg-hkbp-800 hover:bg-hkbp-900 text-white text-sm font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
+                            <button type="submit" class="w-full bg-linear-to-b from-hkbp-800 to-hkbp-900 hover:from-hkbp-700 hover:to-hkbp-800 text-white text-sm font-bold py-3.5 rounded-xl shadow-brand-sm transition-all duration-200 flex items-center justify-center gap-2">
                                 <i data-lucide="send" class="w-4 h-4" aria-hidden="true"></i> Kirim Permohonan
                             </button>
 
@@ -82,7 +89,7 @@
 
                         {{-- Di luar <form>: menempatkannya di dalam membuat tautan ini
                              ikut terbaca sebagai bagian dari isian yang harus dikirim. --}}
-                        <p class="mt-6 pt-6 border-t border-slate-200 text-center text-sm text-slate-600">
+                        <p class="mt-6 pt-6 border-t border-slate-100 text-center text-sm text-slate-600">
                             Sudah pernah mengirim permohonan?
                             <a href="{{ route('penggunaan-gereja.lacak') }}" class="inline-block py-2 font-bold text-hkbp-800 hover:text-hkbp-900 underline underline-offset-4">
                                 Lacak statusnya di sini
@@ -93,10 +100,30 @@
 
                 {{-- DAFTAR JADWAL --}}
                 <div class="lg:col-span-3 min-w-0">
-                    <h2 class="text-xl font-black text-hkbp-900 mb-1 flex items-center gap-2">
-                        <i data-lucide="calendar-days" class="w-5 h-5 text-gold-700" aria-hidden="true"></i> Jadwal Penggunaan Gedung
-                    </h2>
+                    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-1">
+                        <h2 class="text-xl font-black text-hkbp-900 flex items-center gap-2">
+                            <i data-lucide="calendar-days" class="w-5 h-5 text-gold-700" aria-hidden="true"></i> Jadwal Penggunaan Gedung
+                        </h2>
+                        <a href="{{ route('penggunaan-gereja.kalender') }}" class="inline-flex items-center gap-2 min-h-11 px-4 rounded-xl bg-white border border-slate-300 text-hkbp-800 hover:border-hkbp-800 text-sm font-bold shadow-brand-sm">
+                            <i data-lucide="calendar-check" class="w-4 h-4" aria-hidden="true"></i> Unduh Kalender
+                        </a>
+                    </div>
                     <p class="text-sm text-slate-500 mb-6">Daftar kegiatan yang akan menggunakan gedung gereja. Silakan cek dulu sebelum mengajukan permohonan.</p>
+
+                    <form action="{{ route('penggunaan-gereja') }}" method="GET" class="mb-6 flex gap-3 items-end">
+                        <div class="flex-1">
+                            <label for="bulan" class="block text-sm font-bold text-hkbp-900 mb-1">Tampilkan bulan</label>
+                            <select id="bulan" name="bulan" data-auto-submit class="w-full min-h-11 rounded-xl border border-slate-300 bg-white px-4 text-slate-700 focus:outline-none focus:ring-2 focus:ring-hkbp-800/30">
+                                <option value="">Semua jadwal mendatang</option>
+                                @foreach($bulanTersedia as $opsi)
+                                    <option value="{{ $opsi['nilai'] }}" @selected($bulan === $opsi['nilai'])>{{ $opsi['label'] }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        @if($bulan)
+                            <a href="{{ route('penggunaan-gereja') }}" class="inline-flex items-center min-h-11 px-4 rounded-xl text-sm font-bold text-slate-600 bg-white border border-slate-300 hover:text-hkbp-900">Reset</a>
+                        @endif
+                    </form>
 
                     <div class="space-y-4">
                         @forelse($penggunaans as $item)
@@ -106,9 +133,9 @@
                                  teksnya hanya tersisa ~110px pada layar 390px: nama kegiatan
                                  pecah jadi empat baris dan "19:00 - 21:00 WIB" ikut terpotong.
                                  Lencana baru berdampingan mulai breakpoint sm. --}}
-                            <article class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                            <article class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-brand-sm hover:shadow-brand transition-shadow duration-300 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                                 <div class="flex items-start gap-4 min-w-0">
-                                    <p class="bg-blue-50 text-hkbp-800 rounded-xl px-3 py-2 text-center shrink-0 w-20">
+                                    <p class="bg-blue-50 text-hkbp-800 rounded-xl px-3 py-2 text-center shrink-0 w-20 ring-1 ring-inset ring-blue-100">
                                         <time datetime="{{ $item->tanggal->toDateString() }}">
                                             <span class="block text-[11px] font-bold uppercase">{{ $item->tanggal->translatedFormat('M') }}</span>
                                             <span class="block text-xl font-black leading-none">{{ $item->tanggal->format('d') }}</span>
