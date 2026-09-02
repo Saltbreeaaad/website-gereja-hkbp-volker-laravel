@@ -33,7 +33,9 @@ class TwoFactorChallengeController extends Controller
         $data = $request->validate(['kode' => ['required', 'string', 'max:20']]);
         $user = Auth::user();
         $kode = strtoupper(trim($data['kode']));
-        $valid = Totp::verifikasi((string) $user->two_factor_secret, $kode);
+        // Sekali pakai: kode yang sudah dipakai tidak diterima lagi selama sisa
+        // jendela waktunya. Lihat Totp::verifikasiSekali().
+        $valid = Totp::verifikasiSekali((string) $user->two_factor_secret, $kode, $user->getKey());
 
         if (! $valid) {
             $pemulihan = collect($user->two_factor_recovery_codes ?? []);

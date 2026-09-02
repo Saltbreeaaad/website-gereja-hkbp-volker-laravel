@@ -6,6 +6,10 @@ admin untuk pengurus.
 
 **Stack:** Laravel 13 · Filament 3 · Tailwind CSS 4 · Vite 8 · MySQL 8+
 
+**Versi:** 0.9.0 — lihat [CHANGELOG.md](CHANGELOG.md). Masih `0.x` karena situs
+belum pernah naik ke hosting sungguhan; `1.0.0` ditandai pada hari situs benar-benar
+dipakai jemaat, bukan pada hari fiturnya dianggap lengkap.
+
 ---
 
 ## Menyiapkan database
@@ -457,5 +461,15 @@ diatur, dan keduanya tidak terlihat rusak sama sekali dari `localhost`:
       karena cache isi halaman publik tidak akan pernah kena)
 - [ ] `npm run build`
 - [ ] HTTPS aktif — `AppServiceProvider` memaksa skema https saat produksi
+- [ ] **`SESSION_SECURE_COOKIE=true`** — tanpa ini cookie sesi tidak bertanda
+      `Secure`, dan browser ikut mengirimkannya pada permintaan http mana pun ke
+      domain yang sama. Satu tautan http yang terlanjur tersebar cukup untuk
+      membocorkan sesi pengurus yang sedang masuk. Ini tidak dapat dinyalakan di
+      lokal, jadi tidak ada yang menyadarinya sampai situs sudah naik.
 - [ ] Aktifkan modul Apache `mod_deflate`, `mod_expires`, `mod_headers`
       (dipakai `public/.htaccess` untuk kompresi, cache, dan header keamanan)
+
+Di luar Apache — nginx, Caddy, Railway — `public/.htaccess` tidak dibaca sama
+sekali. Header keamanannya tetap terpasang lewat `App\Http\Middleware\SecurityHeaders`,
+termasuk HSTS, yang diterbitkan hanya saat `APP_ENV=production` **dan**
+permintaannya benar-benar https.

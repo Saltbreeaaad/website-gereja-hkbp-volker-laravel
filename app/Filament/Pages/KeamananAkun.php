@@ -66,7 +66,7 @@ class KeamananAkun extends Page
             return;
         }
 
-        if (! Totp::verifikasi($this->rahasia, $this->kode)) {
+        if (! Totp::verifikasiSekali($this->rahasia, $this->kode, $this->pengguna()->getKey())) {
             $this->addError('kode', 'Kode tidak cocok. Pastikan waktu ponsel sudah otomatis.');
 
             return;
@@ -96,7 +96,7 @@ class KeamananAkun extends Page
 
         $pengguna = $this->pengguna();
 
-        if (! Totp::verifikasi((string) $pengguna->two_factor_secret, $this->kode)) {
+        if (! Totp::verifikasiSekali((string) $pengguna->two_factor_secret, $this->kode, $pengguna->getKey())) {
             $this->addError('kode', 'Masukkan kode autentikator yang benar untuk menonaktifkan 2FA.');
 
             return;
@@ -134,7 +134,7 @@ class KeamananAkun extends Page
             return;
         }
 
-        if (! Totp::verifikasi((string) $pengguna->two_factor_secret, $this->kode)) {
+        if (! Totp::verifikasiSekali((string) $pengguna->two_factor_secret, $this->kode, $pengguna->getKey())) {
             $this->addError('kode', 'Masukkan kode autentikator yang benar untuk menerbitkan ulang.');
 
             return;

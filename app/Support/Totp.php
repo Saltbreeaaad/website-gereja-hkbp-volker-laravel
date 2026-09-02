@@ -2,6 +2,8 @@
 
 namespace App\Support;
 
+use Illuminate\Support\Facades\Cache;
+
 final class Totp
 {
     private const ALFABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
@@ -13,10 +15,54 @@ final class Totp
 
     public static function verifikasi(string $rahasia, string $kode, int $jendela = 1): bool
     {
+        return self::langkahCocok($rahasia, $kode, $jendela) !== null;
+    }
+
+    /**
+     * Verifikasi kode dan langsung membakarnya: kode yang sama tidak akan
+     * pernah diterima dua kali.
+     *
+     * RFC 6238 §5.2 mensyaratkan ini, dan tanpanya satu kode tetap sah selama
+     * ~90 detik (tiga langkah waktu, karena jendela toleransinya ±1). Kode yang
+     * terbaca dari balik bahu, tertinggal di layar yang tidak terkunci, atau
+     * terkirim ke halaman phishing masih dapat dipakai ulang oleh orang lain
+     * selama sisa jendela itu. Pembatasan laju di route hanya memperlambat
+     * penebakan; ia tidak menghalangi pemakaian ulang kode yang memang benar.
+     *
+     * `Cache::add()` bersifat atomik — ia menulis hanya bila kuncinya belum ada
+     * — sehingga dua permintaan yang datang bersamaan dengan kode yang sama
+     * tidak dapat sama-sama lolos.
+     *
+     * $penanda memisahkan penghitungan per akun; isi dengan id pengguna. Tanpa
+     * itu, kode yang dipakai satu pengurus akan memblokir pengurus lain yang
+     * kebetulan menghasilkan enam angka yang sama.
+     */
+    public static function verifikasiSekali(string $rahasia, string $kode, string|int $penanda, int $jendela = 1): bool
+    {
+        $langkah = self::langkahCocok($rahasia, $kode, $jendela);
+
+        if ($langkah === null) {
+            return false;
+        }
+
+        // 120 detik: lebih panjang dari jendela terlebar yang mungkin diterima
+        // (tiga langkah = 90 detik), jadi catatannya tidak pernah kedaluwarsa
+        // lebih dulu daripada kodenya sendiri.
+        return Cache::add("totp-terpakai:{$penanda}:{$langkah}", true, 120);
+    }
+
+    /**
+     * Langkah waktu yang cocok dengan kode, atau null bila tidak ada.
+     *
+     * Mengembalikan langkahnya — bukan sekadar true — supaya pemanggil dapat
+     * mencatat kode mana yang sudah terpakai; lihat verifikasiSekali().
+     */
+    public static function langkahCocok(string $rahasia, string $kode, int $jendela = 1): ?int
+    {
         $kode = preg_replace('/\D/', '', $kode);
 
         if (! is_string($kode) || strlen($kode) !== 6) {
-            return false;
+            return null;
         }
 
         // Rahasia kosong atau bukan base32 tetap menghasilkan kunci HMAC yang
@@ -24,18 +70,18 @@ final class Totp
         // pun tanpa perlu mengetahui rahasia apa pun. Akun tanpa rahasia harus
         // menolak, bukan menerima kode yang bisa ditebak dari waktu saja.
         if (self::base32Decode($rahasia) === '') {
-            return false;
+            return null;
         }
 
         $langkah = intdiv(time(), 30);
 
         for ($selisih = -$jendela; $selisih <= $jendela; $selisih++) {
             if (hash_equals(self::kode($rahasia, $langkah + $selisih), $kode)) {
-                return true;
+                return $langkah + $selisih;
             }
         }
 
-        return false;
+        return null;
     }
 
     public static function uri(string $rahasia, string $email): string

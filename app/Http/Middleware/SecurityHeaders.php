@@ -32,7 +32,7 @@ class SecurityHeaders
 
         $response = $next($request);
 
-        foreach ($this->header() as $nama => $nilai) {
+        foreach ($this->header($request) as $nama => $nilai) {
             $response->headers->set($nama, $nilai);
         }
 
@@ -40,9 +40,9 @@ class SecurityHeaders
     }
 
     /** @return array<string, string> */
-    private function header(): array
+    private function header(Request $request): array
     {
-        return [
+        $header = [
             'Content-Security-Policy' => $this->csp(),
             'X-Content-Type-Options' => 'nosniff',
             'Referrer-Policy' => 'strict-origin-when-cross-origin',
@@ -50,6 +50,32 @@ class SecurityHeaders
             'Permissions-Policy' => 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
             'Cross-Origin-Opener-Policy' => 'same-origin',
         ];
+
+        // HSTS: setelah kunjungan pertama, browser menolak membuka situs ini
+        // lewat http sama sekali — termasuk mengubah tautan http yang diklik
+        // jemaat menjadi https sebelum permintaannya pernah meninggalkan
+        // perangkat. Itu yang menutup celah yang tidak bisa ditutup redirect
+        // di sisi server: permintaan http yang pertama.
+        //
+        // public/.htaccess sudah memasangnya, tetapi hanya berlaku bila situs
+        // dilayani Apache — dan alasan berkas middleware ini ada sejak awal
+        // adalah supaya header keamanan ikut ke nginx, Caddy, dan hosting mana
+        // pun. Nilainya sengaja sama persis dengan yang di .htaccess supaya
+        // keduanya tidak pernah menjanjikan dua hal berbeda.
+        //
+        // Hanya di produksi dan hanya pada permintaan yang benar-benar https:
+        // browser mengabaikan HSTS yang datang lewat http, dan memasangnya saat
+        // pengembangan lokal berarti mengunci `localhost` ke https di browser
+        // pengembang — kesalahan yang bertahan lama dan sulit ditelusuri.
+        //
+        // Cukup diterbitkan halaman publik: HSTS berlaku untuk seluruh host,
+        // jadi /admin ikut terlindungi meski panel Filament merakit daftar
+        // middleware-nya sendiri dan tidak memuat berkas ini.
+        if (app()->isProduction() && $request->secure()) {
+            $header['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains';
+        }
+
+        return $header;
     }
 
     private function csp(): string

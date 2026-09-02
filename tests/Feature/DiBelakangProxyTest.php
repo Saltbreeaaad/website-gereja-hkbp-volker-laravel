@@ -78,6 +78,34 @@ class DiBelakangProxyTest extends TestCase
         $this->assertStringStartsWith('https://contoh.trycloudflare.com/', $cocok[1]);
     }
 
+    /**
+     * HSTS menutup permintaan http yang PERTAMA — satu-satunya yang tidak bisa
+     * ditutup redirect di sisi server, karena redirect itu sendiri baru datang
+     * setelah permintaannya terkirim.
+     *
+     * public/.htaccess sudah memasangnya, tetapi hanya terbaca bila situs
+     * dilayani Apache. Header yang sama harus ikut ke nginx, Caddy, dan hosting
+     * mana pun — itulah sebab SecurityHeaders ada.
+     */
+    #[Test]
+    public function hsts_terpasang_di_produksi_lewat_https(): void
+    {
+        $this->app['env'] = 'production';
+
+        $this->get(self::ASAL.'/', $this->headerProxy())
+            ->assertOk()
+            ->assertHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    }
+
+    #[Test]
+    public function hsts_tidak_dipasang_saat_pengembangan_lokal(): void
+    {
+        // Memasangnya di lokal berarti mengunci `localhost` ke https di browser
+        // pengembang selama setahun — kesalahan yang bertahan lama dan sulit
+        // ditelusuri, karena tidak ada yang menghubungkannya dengan situs ini.
+        $this->get('/')->assertOk()->assertHeaderMissing('Strict-Transport-Security');
+    }
+
     #[Test]
     public function host_tidak_bisa_dipalsukan_lewat_x_forwarded_host(): void
     {
