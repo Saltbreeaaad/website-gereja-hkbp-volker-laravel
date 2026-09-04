@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Filament\Resources\PenggunaanGerejaResource\Pages\ListPenggunaanGerejas;
+use App\Filament\Resources\PenggunaanGerejaResource\Pages\ListPenggunaanGereja;
 use App\Models\PenggunaanGereja;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -10,7 +10,7 @@ use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
-class AlurPermohonanLanjutanTest extends TestCase
+class TindakLanjutPermohonanTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -92,7 +92,7 @@ class AlurPermohonanLanjutanTest extends TestCase
         $permohonan = PenggunaanGereja::factory()->create(['kontak' => '081234567890']);
 
         Livewire::actingAs($admin)
-            ->test(ListPenggunaanGerejas::class)
+            ->test(ListPenggunaanGereja::class)
             ->callTableAction('setujui', $permohonan)
             ->assertNotified('Beri tahu pemohon');
 
@@ -106,7 +106,7 @@ class AlurPermohonanLanjutanTest extends TestCase
         $permohonan = PenggunaanGereja::factory()->create(['kontak' => '081234567890']);
 
         Livewire::actingAs($admin)
-            ->test(ListPenggunaanGerejas::class)
+            ->test(ListPenggunaanGereja::class)
             ->callTableAction('tolak', $permohonan)
             ->assertNotified('Beri tahu pemohon');
 
@@ -124,7 +124,7 @@ class AlurPermohonanLanjutanTest extends TestCase
         $permohonan = PenggunaanGereja::factory()->create(['kontak' => 'budi@example.test']);
 
         Livewire::actingAs($admin)
-            ->test(ListPenggunaanGerejas::class)
+            ->test(ListPenggunaanGereja::class)
             ->callTableAction('setujui', $permohonan)
             ->assertNotified('Pemohon belum dikabari');
     }

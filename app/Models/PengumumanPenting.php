@@ -21,6 +21,12 @@ use Illuminate\Database\Eloquent\Model;
  */
 class PengumumanPenting extends Model
 {
+    /**
+     * Disebut eksplisit: tebakan Laravel menjamakkannya dengan `-s` Inggris.
+     * Lihat migrasi samakan_ejaan_nama_tabel.
+     */
+    protected $table = 'pengumuman_penting';
+
     use HasFactory, MencatatAktivitas, MenyegarkanCacheKonten;
 
     protected $fillable = ['judul', 'isi', 'tautan', 'label_tautan', 'mulai_tayang', 'selesai_tayang', 'aktif'];

@@ -74,6 +74,6 @@ class AktivitasAdminTest extends TestCase
             'waktu_selesai' => '11:00',
         ])->assertSessionHasErrors('website');
 
-        $this->assertDatabaseCount('penggunaan_gerejas', 0);
+        $this->assertDatabaseCount('penggunaan_gereja', 0);
     }
 }

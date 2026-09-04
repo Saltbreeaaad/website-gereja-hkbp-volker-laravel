@@ -15,7 +15,8 @@
 
 $ErrorActionPreference = 'Stop'
 
-$akar = Split-Path -Parent $MyInvocation.MyCommand.Path
+# Berkas ini ada di skrip\, jadi akar proyek satu tingkat di atasnya.
+$akar = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 $php = Join-Path $env:USERPROFILE 'scoop\shims\php.exe'
 $tunnel = Join-Path $env:USERPROFILE 'scoop\shims\cloudflared.exe'
 $logTunnel = Join-Path $akar 'storage\logs\tunnel.log'

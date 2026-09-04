@@ -151,7 +151,7 @@ class ParhaladoResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListParhalados::route('/'),
+            'index' => Pages\ListParhalado::route('/'),
             'create' => Pages\CreateParhalado::route('/create'),
             'edit' => Pages\EditParhalado::route('/{record}/edit'),
         ];

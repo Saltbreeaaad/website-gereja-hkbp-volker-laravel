@@ -6,7 +6,7 @@ use App\Filament\Resources\KasGerejaResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
-class ListKasGerejas extends ListRecords
+class ListKasGereja extends ListRecords
 {
     protected static string $resource = KasGerejaResource::class;
 

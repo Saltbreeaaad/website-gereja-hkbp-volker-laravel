@@ -17,6 +17,12 @@ use Illuminate\Database\Eloquent\Model;
  */
 class PermohonanDoa extends Model
 {
+    /**
+     * Disebut eksplisit: tebakan Laravel menjamakkannya dengan `-s` Inggris.
+     * Lihat migrasi samakan_ejaan_nama_tabel.
+     */
+    protected $table = 'permohonan_doa';
+
     use HasFactory;
 
     public const BARU = 'baru';

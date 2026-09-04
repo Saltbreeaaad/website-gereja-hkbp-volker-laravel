@@ -118,7 +118,7 @@ class RenunganResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListRenungans::route('/'),
+            'index' => Pages\ListRenungan::route('/'),
             'create' => Pages\CreateRenungan::route('/create'),
             'edit' => Pages\EditRenungan::route('/{record}/edit'),
         ];

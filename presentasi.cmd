@@ -16,7 +16,7 @@ REM ---------------------------------------------------------------------------
 
 title Presentasi Website HKBP Volker
 
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0presentasi.ps1"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0skrip\presentasi.ps1"
 
 echo.
 pause

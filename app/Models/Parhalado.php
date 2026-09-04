@@ -23,6 +23,12 @@ use Illuminate\Support\Str;
  */
 class Parhalado extends Model
 {
+    /**
+     * Disebut eksplisit: tebakan Laravel menjamakkannya dengan `-s` Inggris.
+     * Lihat migrasi samakan_ejaan_nama_tabel.
+     */
+    protected $table = 'parhalado';
+
     use HasFactory, MembersihkanBerkas, MencatatAktivitas, MengoptimalkanGambar, MenyegarkanCacheKonten;
 
     public const KATEGORI = ['Pendeta', 'Parhalado', 'Kategorial'];

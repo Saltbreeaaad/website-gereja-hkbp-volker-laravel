@@ -9,6 +9,6 @@ REM ---------------------------------------------------------------------------
 
 title Buka Admin HKBP Volker
 
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0buka-admin.ps1"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0skrip\buka-admin.ps1"
 
 timeout /t 3 >nul

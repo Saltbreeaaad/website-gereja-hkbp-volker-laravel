@@ -20,6 +20,12 @@ use Illuminate\Database\Eloquent\Model;
  */
 class JadwalIbadah extends Model
 {
+    /**
+     * Disebut eksplisit: tebakan Laravel menjamakkannya dengan `-s` Inggris.
+     * Lihat migrasi samakan_ejaan_nama_tabel.
+     */
+    protected $table = 'jadwal_ibadah';
+
     use HasFactory, MencatatAktivitas, MenyegarkanCacheKonten;
 
     protected $fillable = ['nama_ibadah', 'tanggal', 'waktu', 'pelayan_firman', 'keterangan'];

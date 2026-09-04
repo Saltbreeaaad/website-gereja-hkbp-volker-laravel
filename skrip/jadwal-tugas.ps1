@@ -20,8 +20,9 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $nama = 'HKBP Volker - Penjadwal Laravel'
-$akar = Split-Path -Parent $MyInvocation.MyCommand.Path
-$peluncur = Join-Path $akar 'jadwal-diam.vbs'
+# Peluncurnya bertetangga dengan berkas ini di skrip\, bukan di akar proyek.
+$dirSkrip = Split-Path -Parent $MyInvocation.MyCommand.Path
+$peluncur = Join-Path $dirSkrip 'jadwal-diam.vbs'
 
 function Ada-Tugas {
     $null -ne (Get-ScheduledTask -TaskName $nama -ErrorAction SilentlyContinue)
@@ -42,7 +43,7 @@ if ($Aksi -eq 'lepas') {
 }
 
 if (-not (Test-Path $peluncur)) {
-    Write-Host "[GAGAL] jadwal-diam.vbs tidak ditemukan di $akar" -ForegroundColor Red
+    Write-Host "[GAGAL] jadwal-diam.vbs tidak ditemukan di $dirSkrip" -ForegroundColor Red
     exit 1
 }
 

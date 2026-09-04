@@ -119,7 +119,7 @@ class GaleriResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListGaleris::route('/'),
+            'index' => Pages\ListGaleri::route('/'),
             'create' => Pages\CreateGaleri::route('/create'),
             'edit' => Pages\EditGaleri::route('/{record}/edit'),
         ];

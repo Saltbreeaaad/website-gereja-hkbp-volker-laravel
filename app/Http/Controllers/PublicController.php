@@ -99,7 +99,7 @@ class PublicController extends Controller
             ];
         });
 
-        return view('welcome', [
+        return view('beranda', [
             'parhalados' => $parhalados,
             'jadwal_ibadah' => $jadwal_ibadah,
             'warta' => $warta,

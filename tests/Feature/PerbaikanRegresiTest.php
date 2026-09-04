@@ -45,7 +45,7 @@ class PerbaikanRegresiTest extends TestCase
             'isi' => 'Mohon didoakan untuk kesehatan keluarga kami.',
         ])->assertRedirect(route('doa'));
 
-        $this->assertDatabaseHas('permohonan_doas', ['nama' => 'Budi']);
+        $this->assertDatabaseHas('permohonan_doa', ['nama' => 'Budi']);
     }
 
     #[Test]
@@ -64,7 +64,7 @@ class PerbaikanRegresiTest extends TestCase
             'keterangan' => '',
         ])->assertSessionHasNoErrors();
 
-        $this->assertDatabaseHas('penggunaan_gerejas', ['nama_kegiatan' => 'Latihan Koor']);
+        $this->assertDatabaseHas('penggunaan_gereja', ['nama_kegiatan' => 'Latihan Koor']);
     }
 
     /** Umpannya tetap harus menahan bot yang benar-benar mengisinya. */
@@ -76,7 +76,7 @@ class PerbaikanRegresiTest extends TestCase
             'isi' => 'Mohon didoakan untuk kesehatan keluarga kami.',
         ])->assertSessionHasErrors('website');
 
-        $this->assertDatabaseCount('permohonan_doas', 0);
+        $this->assertDatabaseCount('permohonan_doa', 0);
     }
 
     /**
@@ -146,7 +146,7 @@ class PerbaikanRegresiTest extends TestCase
 
         $transaksi->update(['nominal' => 750000]);
 
-        $this->assertDatabaseHas('kas_gerejas', ['id' => $transaksi->id, 'nominal' => 750000]);
+        $this->assertDatabaseHas('kas_gereja', ['id' => $transaksi->id, 'nominal' => 750000]);
     }
 
     /**

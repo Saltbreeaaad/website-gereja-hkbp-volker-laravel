@@ -28,6 +28,12 @@ use Illuminate\Support\Str;
  */
 class PenggunaanGereja extends Model
 {
+    /**
+     * Disebut eksplisit: tebakan Laravel menjamakkannya dengan `-s` Inggris.
+     * Lihat migrasi samakan_ejaan_nama_tabel.
+     */
+    protected $table = 'penggunaan_gereja';
+
     use HasFactory, MencatatAktivitas, MenyegarkanCacheKonten;
 
     public const MENUNGGU = 'Menunggu';

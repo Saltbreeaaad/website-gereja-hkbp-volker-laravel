@@ -122,6 +122,6 @@ class PeranPengurusTest extends TestCase
         $this->artisan('db:seed', ['--force' => true])->assertExitCode(0);
 
         $this->assertDatabaseCount('users', 0);
-        $this->assertDatabaseCount('kas_gerejas', 0);
+        $this->assertDatabaseCount('kas_gereja', 0);
     }
 }

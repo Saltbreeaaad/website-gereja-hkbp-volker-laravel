@@ -31,7 +31,7 @@ class KomunikasiJemaatTest extends TestCase
         $this->post(route('doa.store'), ['isi' => 'Mohon doakan kesehatan keluarga kami.'])
             ->assertRedirect(route('doa'));
 
-        $this->assertDatabaseHas('permohonan_doas', ['isi' => 'Mohon doakan kesehatan keluarga kami.', 'status' => PermohonanDoa::BARU]);
+        $this->assertDatabaseHas('permohonan_doa', ['isi' => 'Mohon doakan kesehatan keluarga kami.', 'status' => PermohonanDoa::BARU]);
     }
 
     #[Test]

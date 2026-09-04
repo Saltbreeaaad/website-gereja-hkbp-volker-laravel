@@ -276,7 +276,7 @@ class PenggunaanGerejaResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListPenggunaanGerejas::route('/'),
+            'index' => Pages\ListPenggunaanGereja::route('/'),
             'create' => Pages\CreatePenggunaanGereja::route('/create'),
             'edit' => Pages\EditPenggunaanGereja::route('/{record}/edit'),
         ];

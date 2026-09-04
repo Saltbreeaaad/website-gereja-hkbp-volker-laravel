@@ -140,6 +140,9 @@ hanya setelah dipastikan hosting gereja menyediakannya.
 
 ## Struktur yang perlu diketahui
 
+Aturan penamaan dan peletakan berkas ada di [KONVENSI.md](KONVENSI.md) —
+bacalah sebelum menambah model, halaman panel, rute, atau perintah baru.
+
 | Berkas | Peran |
 |---|---|
 | `config/gereja.php` | **Satu sumber kebenaran** untuk nama, alamat, telepon, koordinat, dan menu navigasi. Ubah data gereja di sini, bukan di Blade. |
@@ -147,7 +150,8 @@ hanya setelah dipastikan hosting gereja menyediakannya.
 | `app/Http/Requests/StorePenggunaanGerejaRequest.php` | Validasi permohonan gedung, termasuk pemeriksaan bentrok jadwal. |
 | `resources/views/components/` | `layout`, `page-hero`, `section-heading`, `empty-state`, `field`, `kartu-pelayan`, `filter-tahun`. |
 | `app/Policies/PengurusPolicy.php` | Dasar perizinan seluruh modul panel. Tiap modul hanya menyebut peran penanggung jawabnya. |
-| `presentasi.cmd` / `buka-admin.cmd` | Menyalakan seluruh situs, dan membuka halaman admin. Logikanya di `presentasi.ps1` dan `buka-admin.ps1`. |
+| `skrip/` | Mesin di balik berkas `.cmd` di akar. Yang diklik pengurus tinggal di akar; yang hanya dipanggil skrip lain ada di sini. |
+| `presentasi.cmd` / `buka-admin.cmd` | Menyalakan seluruh situs, dan membuka halaman admin. Logikanya di `skrip/presentasi.ps1` dan `skrip/buka-admin.ps1`. |
 | `app/Models/User.php` | `canAccessPanel()` adalah gerbang akses `/admin`. Filament menolak 403 semua orang bila metode ini hilang dan `APP_ENV` bukan `local`. |
 | `app/Support/CacheKonten.php` | Cache isi halaman publik, dibatalkan lewat nomor versi. |
 | `app/Models/Concerns/` | `MenyegarkanCacheKonten` (batalkan cache saat data berubah) dan `MembersihkanBerkas` (hapus berkas unggahan yang jadi yatim). |
@@ -237,9 +241,15 @@ melepasnya kembali.
 | Berkas | Peran |
 |---|---|
 | `pasang-jadwal.cmd` / `lepas-jadwal.cmd` | Yang Anda klik. |
-| `jadwal-tugas.ps1` | Mendaftar/melepas tugasnya. PowerShell, bukan `schtasks`, karena `schtasks /tr` tidak bisa diandalkan mengutip jalur berspasi. |
-| `jadwal-diam.vbs` | Peluncur tanpa jendela. Tanpa ini, jendela konsol berkedip **tiap menit** di layar. |
-| `jadwal-laravel.cmd` | Yang benar-benar memanggil `artisan schedule:run`. Berhenti diam-diam bila MySQL mati — di mesin pengembangan itu keadaan normal, bukan kegagalan. |
+| `skrip/jadwal-tugas.ps1` | Mendaftar/melepas tugasnya. PowerShell, bukan `schtasks`, karena `schtasks /tr` tidak bisa diandalkan mengutip jalur berspasi. |
+| `skrip/jadwal-diam.vbs` | Peluncur tanpa jendela. Tanpa ini, jendela konsol berkedip **tiap menit** di layar. |
+| `skrip/jadwal-laravel.cmd` | Yang benar-benar memanggil `artisan schedule:run`. Berhenti diam-diam bila MySQL mati — di mesin pengembangan itu keadaan normal, bukan kegagalan. |
+
+Tugas terjadwalnya menyimpan **jalur absolut** ke `skrip/jadwal-diam.vbs`.
+Memindahkan atau mengganti nama berkas itu membuat tugasnya menunjuk ke
+berkas yang tidak ada — dan Windows tidak mengeluh, ia hanya berhenti
+mencadangkan. Setelah memindahkannya, jalankan `lepas-jadwal.cmd` lalu
+`pasang-jadwal.cmd` supaya jalurnya ditulis ulang.
 
 Catatan penjadwal ada di `storage/logs/jadwal.log`, catatan cadangan di
 `storage/logs/cadangan.log`.

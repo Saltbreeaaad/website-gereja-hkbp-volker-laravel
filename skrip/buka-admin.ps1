@@ -10,7 +10,8 @@
 
 $ErrorActionPreference = 'Stop'
 
-$akar = Split-Path -Parent $MyInvocation.MyCommand.Path
+# Berkas ini ada di skrip\, jadi akar proyek satu tingkat di atasnya.
+$akar = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 $php = Join-Path $env:USERPROFILE 'scoop\shims\php.exe'
 $berkasAlamat = Join-Path $akar 'storage\app\alamat-publik.txt'
 $port = 8000

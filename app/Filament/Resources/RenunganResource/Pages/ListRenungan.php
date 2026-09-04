@@ -6,7 +6,7 @@ use App\Filament\Resources\RenunganResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
-class ListRenungans extends ListRecords
+class ListRenungan extends ListRecords
 {
     protected static string $resource = RenunganResource::class;
 

@@ -11,7 +11,7 @@ REM
 REM Melepasnya kembali: lepas-jadwal.cmd
 REM ---------------------------------------------------------------------------
 
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0jadwal-tugas.ps1" -Aksi pasang
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0skrip\jadwal-tugas.ps1" -Aksi pasang
 
 echo.
 pause

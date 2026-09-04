@@ -32,7 +32,7 @@ use Tests\TestCase;
  * tes yang ada semuanya hijau. Peninjauan kode tidak bisa menangkap yang
  * seperti itu; hanya menjalankannya yang bisa.
  */
-class PanelAdminAsapTest extends TestCase
+class RenderHalamanPanelTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -40,18 +40,18 @@ class PanelAdminAsapTest extends TestCase
     public static function halamanDaftar(): array
     {
         return [
-            'galeri' => [Resources\GaleriResource\Pages\ListGaleris::class],
-            'jadwal ibadah' => [Resources\JadwalIbadahResource\Pages\ListJadwalIbadahs::class],
-            'kas gereja' => [Resources\KasGerejaResource\Pages\ListKasGerejas::class],
+            'galeri' => [Resources\GaleriResource\Pages\ListGaleri::class],
+            'jadwal ibadah' => [Resources\JadwalIbadahResource\Pages\ListJadwalIbadah::class],
+            'kas gereja' => [Resources\KasGerejaResource\Pages\ListKasGereja::class],
             'log aktivitas' => [Resources\LogAktivitasResource\Pages\ListLogAktivitas::class],
-            'parhalado' => [Resources\ParhaladoResource\Pages\ListParhalados::class],
-            'penggunaan gereja' => [Resources\PenggunaanGerejaResource\Pages\ListPenggunaanGerejas::class],
+            'parhalado' => [Resources\ParhaladoResource\Pages\ListParhalado::class],
+            'penggunaan gereja' => [Resources\PenggunaanGerejaResource\Pages\ListPenggunaanGereja::class],
             'pengumuman penting' => [Resources\PengumumanPentingResource\Pages\ListPengumumanPenting::class],
             'periode kas' => [Resources\PeriodeKasResource\Pages\ListPeriodeKas::class],
             'permohonan doa' => [Resources\PermohonanDoaResource\Pages\ListPermohonanDoa::class],
-            'renungan' => [Resources\RenunganResource\Pages\ListRenungans::class],
-            'pengguna' => [Resources\UserResource\Pages\ListUsers::class],
-            'warta jemaat' => [Resources\WartaJemaatResource\Pages\ListWartaJemaats::class],
+            'renungan' => [Resources\RenunganResource\Pages\ListRenungan::class],
+            'pengguna' => [Resources\UserResource\Pages\ListUser::class],
+            'warta jemaat' => [Resources\WartaJemaatResource\Pages\ListWartaJemaat::class],
         ];
     }
 

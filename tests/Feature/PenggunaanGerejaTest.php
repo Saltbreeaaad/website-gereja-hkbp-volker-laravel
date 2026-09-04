@@ -31,7 +31,7 @@ class PenggunaanGerejaTest extends TestCase
         $this->post(route('penggunaan-gereja.store'), $this->permohonan())
             ->assertSessionHas('success');
 
-        $this->assertDatabaseHas('penggunaan_gerejas', [
+        $this->assertDatabaseHas('penggunaan_gereja', [
             'nama_kegiatan' => 'Latihan Koor Remaja',
             'status' => PenggunaanGereja::MENUNGGU,
         ]);
@@ -53,7 +53,7 @@ class PenggunaanGerejaTest extends TestCase
     {
         $this->post(route('penggunaan-gereja.store'), $this->permohonan());
 
-        $this->assertDatabaseHas('penggunaan_gerejas', [
+        $this->assertDatabaseHas('penggunaan_gereja', [
             'waktu_mulai' => '18:00:00',
             'waktu_selesai' => '20:00:00',
         ]);
@@ -71,7 +71,7 @@ class PenggunaanGerejaTest extends TestCase
         $this->post(route('penggunaan-gereja.store'), $this->permohonan())
             ->assertSessionHasErrors('waktu_mulai');
 
-        $this->assertDatabaseCount('penggunaan_gerejas', 1);
+        $this->assertDatabaseCount('penggunaan_gereja', 1);
     }
 
     #[Test]
@@ -86,7 +86,7 @@ class PenggunaanGerejaTest extends TestCase
         $this->post(route('penggunaan-gereja.store'), $this->permohonan())
             ->assertSessionHasNoErrors();
 
-        $this->assertDatabaseCount('penggunaan_gerejas', 2);
+        $this->assertDatabaseCount('penggunaan_gereja', 2);
     }
 
     #[Test]

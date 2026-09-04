@@ -19,7 +19,7 @@ class RiwayatStatusPenggunaanGereja extends Model
 {
     public const UPDATED_AT = null;
 
-    protected $table = 'riwayat_status_penggunaan_gerejas';
+    protected $table = 'riwayat_status_penggunaan_gereja';
 
     protected $fillable = [
         'penggunaan_gereja_id',

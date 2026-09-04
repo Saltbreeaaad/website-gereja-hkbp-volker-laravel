@@ -27,7 +27,7 @@ class KodePermohonanUnikTest extends TestCase
 
         // Lewat query builder, supaya pengecekan di PHP tidak ikut campur dan
         // yang benar-benar diuji adalah batasan di basis data.
-        DB::table('penggunaan_gerejas')->insert([
+        DB::table('penggunaan_gereja')->insert([
             'kode' => $pertama->kode,
             'nama_kegiatan' => 'Kegiatan Kembar',
             'nama_pemohon' => 'Pemohon Lain',
@@ -46,7 +46,7 @@ class KodePermohonanUnikTest extends TestCase
     {
         $this->expectException(QueryException::class);
 
-        DB::table('penggunaan_gerejas')->insert([
+        DB::table('penggunaan_gereja')->insert([
             'kode' => null,
             'nama_kegiatan' => 'Tanpa Kode',
             'nama_pemohon' => 'Pemohon',

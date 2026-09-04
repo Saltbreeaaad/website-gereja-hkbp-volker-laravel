@@ -52,7 +52,7 @@ class BomGambarTest extends TestCase
             'foto' => 'galeri-photos/bom.png',
         ]);
 
-        $this->assertDatabaseHas('galeris', ['id' => $galeri->id]);
+        $this->assertDatabaseHas('galeri', ['id' => $galeri->id]);
         $this->assertSame('galeri-photos/bom.png', $galeri->fresh()->foto);
     }
 

@@ -116,6 +116,6 @@ class PembersihanBerkasTest extends TestCase
 
         $galeri->delete();
 
-        $this->assertDatabaseMissing('galeris', ['id' => $galeri->id]);
+        $this->assertDatabaseMissing('galeri', ['id' => $galeri->id]);
     }
 }

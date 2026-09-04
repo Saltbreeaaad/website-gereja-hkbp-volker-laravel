@@ -10,6 +10,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
@@ -19,9 +20,17 @@ use Illuminate\Support\Str;
  * @property string|null $penulis
  * @property string|null $foto
  * @property string $isi
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  */
 class Renungan extends Model
 {
+    /**
+     * Disebut eksplisit: tebakan Laravel menjamakkannya dengan `-s` Inggris.
+     * Lihat migrasi samakan_ejaan_nama_tabel.
+     */
+    protected $table = 'renungan';
+
     use HasFactory, MembersihkanBerkas, MencatatAktivitas, MengoptimalkanGambar, MenyegarkanCacheKonten;
 
     protected $fillable = ['judul', 'tanggal', 'penulis', 'foto', 'isi'];

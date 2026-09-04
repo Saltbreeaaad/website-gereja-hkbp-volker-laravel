@@ -18,9 +18,10 @@ REM ---------------------------------------------------------------------------
 
 setlocal
 
-REM %~dp0 = direktori berkas ini, berakhiran backslash. Dipakai supaya tugas
-REM terjadwal tidak bergantung pada direktori kerja yang diberikan Windows.
-set "PROYEK=%~dp0."
+REM %~dp0 = direktori berkas ini (skrip\), berakhiran backslash; akar proyek
+REM ada satu tingkat di atasnya. Dipakai supaya tugas terjadwal tidak
+REM bergantung pada direktori kerja yang diberikan Windows.
+set "PROYEK=%~dp0.."
 set "PHP=%USERPROFILE%\scoop\shims\php.exe"
 
 if not exist "%PHP%" set "PHP=php"

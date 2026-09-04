@@ -107,7 +107,7 @@ class WartaJemaatResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListWartaJemaats::route('/'),
+            'index' => Pages\ListWartaJemaat::route('/'),
             'create' => Pages\CreateWartaJemaat::route('/create'),
             'edit' => Pages\EditWartaJemaat::route('/{record}/edit'),
         ];

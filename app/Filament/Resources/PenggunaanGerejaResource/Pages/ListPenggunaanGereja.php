@@ -6,7 +6,7 @@ use App\Filament\Resources\PenggunaanGerejaResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
-class ListPenggunaanGerejas extends ListRecords
+class ListPenggunaanGereja extends ListRecords
 {
     protected static string $resource = PenggunaanGerejaResource::class;
 

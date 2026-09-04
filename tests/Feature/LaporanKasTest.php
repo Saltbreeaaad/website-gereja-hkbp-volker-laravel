@@ -11,7 +11,7 @@ use Illuminate\Validation\ValidationException;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
-class LaporanKasLanjutanTest extends TestCase
+class LaporanKasTest extends TestCase
 {
     use RefreshDatabase;
 

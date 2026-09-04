@@ -20,6 +20,12 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Galeri extends Model
 {
+    /**
+     * Disebut eksplisit: tebakan Laravel menjamakkannya dengan `-s` Inggris.
+     * Lihat migrasi samakan_ejaan_nama_tabel.
+     */
+    protected $table = 'galeri';
+
     use HasFactory, MembersihkanBerkas, MencatatAktivitas, MengoptimalkanGambar, MenyegarkanCacheKonten;
 
     protected $fillable = ['judul', 'kategori', 'foto', 'tanggal'];

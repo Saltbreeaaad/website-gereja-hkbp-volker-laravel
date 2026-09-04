@@ -19,6 +19,12 @@ use Illuminate\Support\Facades\Storage;
  */
 class WartaJemaat extends Model
 {
+    /**
+     * Disebut eksplisit: tebakan Laravel menjamakkannya dengan `-s` Inggris.
+     * Lihat migrasi samakan_ejaan_nama_tabel.
+     */
+    protected $table = 'warta_jemaat';
+
     use HasFactory, MembersihkanBerkas, MencatatAktivitas, MenyegarkanCacheKonten;
 
     protected $fillable = ['judul', 'tanggal', 'file_warta'];

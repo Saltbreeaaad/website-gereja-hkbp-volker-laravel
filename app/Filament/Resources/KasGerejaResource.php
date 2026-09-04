@@ -156,7 +156,7 @@ class KasGerejaResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListKasGerejas::route('/'),
+            'index' => Pages\ListKasGereja::route('/'),
             'create' => Pages\CreateKasGereja::route('/create'),
             'edit' => Pages\EditKasGereja::route('/{record}/edit'),
         ];

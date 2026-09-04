@@ -112,7 +112,7 @@ class JadwalIbadahResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListJadwalIbadahs::route('/'),
+            'index' => Pages\ListJadwalIbadah::route('/'),
             'create' => Pages\CreateJadwalIbadah::route('/create'),
             'edit' => Pages\EditJadwalIbadah::route('/{record}/edit'),
         ];

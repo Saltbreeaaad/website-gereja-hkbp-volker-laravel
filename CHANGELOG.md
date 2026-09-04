@@ -35,6 +35,28 @@ fiturnya dianggap lengkap.
   kabarnya lewat WhatsApp, lengkap dengan tombolnya. Kontak yang bukan nomor
   telepon diberitahukan secara terpisah alih-alih dilewati diam-diam.
 
+### Diubah
+
+- **Penamaan diseragamkan, dan aturannya dituliskan di `KONVENSI.md`.** Kode ini
+  memuat dua konvensi sekaligus: generator Laravel/Filament menjamakkan kata
+  Indonesia dengan `-s` Inggris (`kas_gerejas`, `ListGaleris`), sementara berkas
+  yang ditulis tangan tidak (`periode_kas`, `ListPeriodeKas`). Sekarang tidak ada
+  yang dijamakkan sama sekali:
+  - Sepuluh tabel diubah namanya lewat migrasi `samakan_ejaan_nama_tabel`
+    — rename, bukan penyuntingan migrasi lama, supaya basis data yang sudah
+    berisi data ikut berpindah tanpa dibuat ulang. Modelnya kini menyebut
+    `$table` eksplisit.
+  - Delapan kelas halaman Filament mengikuti pola `<Aksi><NamaModel>`.
+  - `welcome.blade.php` menjadi `beranda.blade.php` — sisa scaffold Laravel di
+    antara dua belas view lain yang semuanya berbahasa Indonesia.
+  - Empat berkas test yang namanya tidak menerangkan apa pun diganti; "Lanjutan"
+    hanya berarti "ditulis belakangan".
+  - Lima skrip yang hanya dipanggil skrip lain pindah ke `skrip/`, sehingga akar
+    aplikasi hanya memuat empat berkas yang memang diklik pengurus.
+
+  URL, nama menu panel, dan nama perintah `hkbp:*` **tidak** disentuh: ketiganya
+  sudah beredar di luar dan biayanya ditanggung orang lain.
+
 ### Diperbaiki
 
 - **Halaman luring tampil tanpa CSS.** Service worker melayani permintaan aset

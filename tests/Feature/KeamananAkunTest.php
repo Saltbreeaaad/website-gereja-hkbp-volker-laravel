@@ -17,7 +17,7 @@ use Tests\TestCase;
  * Pengerasan alur 2FA: konfirmasi kata sandi, kode pemulihan yang dapat
  * diterbitkan ulang, dan verifikasi yang terikat pada satu sesi masuk.
  */
-class KeamananAkunLanjutanTest extends TestCase
+class KeamananAkunTest extends TestCase
 {
     use RefreshDatabase;
 

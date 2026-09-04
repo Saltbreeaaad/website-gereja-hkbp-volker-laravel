@@ -22,6 +22,12 @@ use Illuminate\Validation\ValidationException;
  */
 class KasGereja extends Model
 {
+    /**
+     * Disebut eksplisit: tebakan Laravel menjamakkannya dengan `-s` Inggris.
+     * Lihat migrasi samakan_ejaan_nama_tabel.
+     */
+    protected $table = 'kas_gereja';
+
     use HasFactory, MencatatAktivitas, MenyegarkanCacheKonten;
 
     protected $fillable = [
