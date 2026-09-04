@@ -41,6 +41,14 @@ fiturnya dianggap lengkap.
   dari cache tetapi tidak pernah menuliskan apa pun ke sana selain HTML, jadi
   halaman yang tersimpan terbuka tanpa gaya sama sekali saat benar-benar luring.
   Berkas gaya, skrip, font, dan gambar sesama asal kini ikut tersimpan.
+- **`composer.lock` tidak lagi melampaui PHP minimum yang dijanjikan.**
+  Lock dibuat di PHP 8.5 tanpa `config.platform`, sehingga composer mengunci
+  Symfony 8.1 yang menuntut PHP >= 8.4.1 — padahal `composer.json` dan CI
+  sama-sama menyebut 8.3. Ketahuan pada hari CI pertama kali berjalan:
+  `composer install` gagal sebelum satu tes pun sempat dijalankan. Platform
+  kini dikunci ke `8.3`, dan dependensinya diselesaikan ulang untuk versi itu
+  (Symfony turun ke 7.4 LTS; Laravel justru naik ke 13.30.1).
+
 - **Nama cache service worker mengikuti nomor rilis.** Sebelumnya tetap
   `hkbp-volker-v1` selamanya, sehingga aset lama terus dilayani setelah situs
   naik versi. `VERSI` di `public/sw.js` harus dinaikkan bersama versi di berkas

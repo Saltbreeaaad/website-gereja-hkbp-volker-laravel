@@ -4,7 +4,7 @@ Website resmi jemaat: jadwal ibadah, renungan harian, warta jemaat, laporan kas
 gereja, galeri kegiatan, dan permohonan penggunaan gedung gereja — dengan panel
 admin untuk pengurus.
 
-**Stack:** Laravel 13 · Filament 3 · Tailwind CSS 4 · Vite 8 · MySQL 8+
+**Stack:** Laravel 13 · Filament 3 · Tailwind CSS 4 · Vite 8 · MySQL 8+ · PHP 8.3+
 
 **Versi:** 0.9.0 — lihat [CHANGELOG.md](CHANGELOG.md). Masih `0.x` karena situs
 belum pernah naik ke hosting sungguhan; `1.0.0` ditandai pada hari situs benar-benar
@@ -112,6 +112,29 @@ dinyatakan "not implemented" oleh `symfony/polyfill-mbstring`, dan
 `mb_strimwidth()`-lah yang dipakai `Str::limit()` sehingga tanpanya beranda
 membalas 500. Keduanya dijaga `function_exists()`, jadi tidak melakukan apa pun
 di mesin yang mbstring-nya sehat.
+
+### Versi PHP dan `config.platform`
+
+Proyek ini mendukung **PHP 8.3 ke atas**, dan `composer.json` mengunci
+`config.platform.php` ke `8.3`.
+
+Setelan itu bukan hiasan. Tanpanya, `composer update` menyelesaikan dependensi
+menurut PHP yang kebetulan terpasang di mesin yang menjalankannya — dan itulah
+yang pernah terjadi di sini: lock dibuat di PHP 8.5, composer bebas memilih
+Symfony 8.1 yang menuntut PHP >= 8.4.1, dan `composer.lock` diam-diam
+melampaui minimum yang dijanjikan `composer.json` sendiri. Tidak ada yang
+menyadarinya sampai CI mencoba memasangnya di PHP 8.3 dan gagal sebelum satu
+tes pun berjalan.
+
+Akibatnya, **jangan melepas setelan itu untuk "mendapat versi terbaru"**.
+Melepasnya akan langsung mengembalikan keadaan yang sama, dan gejalanya baru
+muncul di server — bukan di laptop pengembang, yang PHP-nya justru selalu lebih
+baru.
+
+Menaikkan syarat minimum ke PHP 8.4 adalah keputusan yang sah, tetapi harus
+disengaja: ubah `require.php`, `config.platform.php`, `php-version` di
+`.github/workflows/ci.yml`, dan sebutan versi di berkas ini — sekaligus, dan
+hanya setelah dipastikan hosting gereja menyediakannya.
 
 ---
 
