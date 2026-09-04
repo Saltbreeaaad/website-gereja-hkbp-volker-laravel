@@ -41,6 +41,15 @@ fiturnya dianggap lengkap.
   dari cache tetapi tidak pernah menuliskan apa pun ke sana selain HTML, jadi
   halaman yang tersimpan terbuka tanpa gaya sama sekali saat benar-benar luring.
   Berkas gaya, skrip, font, dan gambar sesama asal kini ikut tersimpan.
+- **Tes tidak lagi bergantung pada aset hasil build.** Layout memanggil
+  `@vite`, jadi 94 kasus uji diam-diam menuntut `public/build/manifest.json`
+  ada di mesin yang menjalankannya. Di laptop pengembang berkas itu selalu ada;
+  pada klon baru dan di CI — yang membangun aset di job terpisah — tidak, dan
+  semuanya gagal serentak dengan "Vite manifest not found". Vite kini dimatikan
+  di `tests/TestCase.php`, dan satu-satunya kasus yang memang menguji URL aset
+  (`DiBelakangProxyTest`) membangun manifest tiruannya sendiri di direktori
+  terpisah, sehingga ia berdiri sendiri tanpa pernah menimpa hasil build.
+
 - **`composer.lock` tidak lagi melampaui PHP minimum yang dijanjikan.**
   Lock dibuat di PHP 8.5 tanpa `config.platform`, sehingga composer mengunci
   Symfony 8.1 yang menuntut PHP >= 8.4.1 — padahal `composer.json` dan CI

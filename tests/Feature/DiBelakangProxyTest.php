@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\Galeri;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Vite;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
@@ -27,6 +29,50 @@ class DiBelakangProxyTest extends TestCase
      */
     private const ASAL = 'http://contoh.trycloudflare.com';
 
+    /**
+     * Direktori build khusus tes. Sengaja BUKAN `build`: menulis ke sana akan
+     * menimpa hasil `npm run build` milik pengembang yang sedang bekerja.
+     */
+    private const BUILD_UJI = 'build-uji';
+
+    private ?string $direktoriVite = null;
+
+    protected function tearDown(): void
+    {
+        if ($this->direktoriVite !== null) {
+            File::deleteDirectory($this->direktoriVite);
+            $this->direktoriVite = null;
+        }
+
+        parent::tearDown();
+    }
+
+    /**
+     * Nyalakan kembali Vite dengan manifest buatan sendiri.
+     *
+     * Hanya kasus di bawah ini yang benar-benar menguji URL aset, dan ia dulu
+     * diam-diam bergantung pada `public/build` hasil build di mesin yang
+     * menjalankannya. Klon baru tidak memilikinya, dan CI membangun aset di
+     * job terpisah -- jadi yang dijaga kasus ini justru tidak pernah terjaga
+     * di tempat yang paling penting. Manifest tiruan membuatnya berdiri
+     * sendiri, dan isinya cukup dua entri karena yang diperiksa adalah skema
+     * URL-nya, bukan isi berkasnya.
+     */
+    private function pakaiManifestTiruan(): void
+    {
+        $this->direktoriVite = public_path(self::BUILD_UJI);
+
+        File::ensureDirectoryExists($this->direktoriVite.'/assets');
+        File::put($this->direktoriVite.'/manifest.json', (string) json_encode([
+            'resources/css/app.css' => ['file' => 'assets/app-uji.css', 'src' => 'resources/css/app.css', 'isEntry' => true],
+            'resources/js/app.js' => ['file' => 'assets/app-uji.js', 'src' => 'resources/js/app.js', 'isEntry' => true],
+        ]));
+
+        $this->withVite();
+        Vite::clearResolvedInstance();
+        Vite::useBuildDirectory(self::BUILD_UJI);
+    }
+
     /** @return array<string, string> */
     private function headerProxy(): array
     {
@@ -39,10 +85,14 @@ class DiBelakangProxyTest extends TestCase
     #[Test]
     public function url_aset_ikut_https_saat_permintaan_diteruskan_proxy(): void
     {
+        $this->pakaiManifestTiruan();
+
         $isi = $this->get(self::ASAL.'/', $this->headerProxy())->assertOk()->getContent();
 
-        $this->assertStringContainsString('https://contoh.trycloudflare.com/build/', $isi);
-        $this->assertStringNotContainsString('http://contoh.trycloudflare.com/build/', $isi);
+        $awalan = 'contoh.trycloudflare.com/'.self::BUILD_UJI.'/';
+
+        $this->assertStringContainsString('https://'.$awalan, $isi);
+        $this->assertStringNotContainsString('http://'.$awalan, $isi);
     }
 
     #[Test]
