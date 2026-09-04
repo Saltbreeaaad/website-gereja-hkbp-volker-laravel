@@ -245,6 +245,14 @@ Salurannya `database` supaya bekerja tanpa SMTP; untuk ikut mengirim surel,
 tambahkan `'mail'` pada `via()` di `app/Notifications/PermohonanGedungMasuk.php`
 setelah kredensial SMTP gereja terisi.
 
+**Begitu statusnya diubah, panel mengingatkan untuk mengabari pemohon** dan
+menyediakan tombol WhatsApp-nya di dalam pengingat itu. Pesannya tetap dikirim
+seorang pengurus, bukan sistem: gereja ini tidak memakai gateway WhatsApp mana
+pun, dan nomor pemohon adalah nomor pribadi. Bila kontak yang diisi bukan nomor
+telepon (surel, atau angka yang terlalu pendek), pengingatnya mengatakan begitu
+alih-alih melewatinya diam-diam — pemohon itulah yang paling mungkin tidak
+pernah dikabari sama sekali.
+
 ### Fitur operasional dan keamanan
 
 - **Keamanan Akun** di panel mengaktifkan autentikasi dua langkah (TOTP) dan
@@ -267,7 +275,11 @@ setelah kredensial SMTP gereja terisi.
   tampil pada waktu akhir yang ditentukan.
 - **Permohonan Doa** di `/doa` adalah formulir privat. Pesan tidak dicatat di
   log aktivitas dan hanya dapat dibuka administrator atau sekretaris melalui
-  panel pengurus.
+  panel pengurus. Keduanya mendapat notifikasi lonceng saat pokok doa masuk,
+  tetapi notifikasinya **tidak membawa isi doa maupun nama pengirim** — baris
+  notifikasi ikut ke setiap cadangan dan muncul di lonceng yang sering terbuka
+  saat orang lain melihat layar, jadi ia hanya mengatakan bahwa ada yang perlu
+  dibuka.
 
 Perintah pemeliharaan tambahan:
 
@@ -334,6 +346,22 @@ ini dan mendeklarasikan `kolomBerkas()`.
 Swiper dan Chart.js diimpor **dinamis**, hanya saat halaman benar-benar memuat
 carousel atau grafik. Halaman selain beranda hanya mengunduh ~11 kB JavaScript.
 Jangan mengubahnya menjadi impor statis di puncak `resources/js/app.js`.
+
+### Service worker (PWA)
+
+`public/sw.js` menyimpan kerangka halaman **dan** aset sesama asal — gaya,
+skrip, font, gambar. Aset lintas asal tidak ikut, termasuk Google Fonts;
+halaman luring jatuh ke tumpukan font sistem yang sudah disiapkan di
+`resources/css/app.css`.
+
+**Naikkan `VERSI` di berkas itu setiap kali versi rilis naik.** Nama cache
+diturunkan dari nomor itu, dan event `activate` menghapus setiap cache yang
+namanya berbeda — itulah satu-satunya mekanisme pembersihan yang dimiliki
+situs ini. Nama yang tidak ikut naik berarti peramban jemaat terus melayani
+aset lama setelah situs diperbarui, dan satu-satunya jalan keluarnya adalah
+meminta mereka menghapus data situs sendiri.
+`tests/Feature/PwaLuringTest.php` menjaga agar nomornya tidak tertinggal dari
+`CHANGELOG.md`.
 
 ### Blade
 

@@ -84,4 +84,31 @@ class LaporanKasLanjutanTest extends TestCase
 
         Storage::disk('local')->assertMissing('bukti-kas/uji.pdf');
     }
+
+    /**
+     * Ekspor CSV kini mengalirkan barisnya alih-alih memuat seluruh transaksi
+     * ke memori lebih dulu. Yang dijaga di sini adalah bahwa urutan dan angka
+     * ringkasannya tidak ikut berubah karenanya: `lazyById()` — pilihan yang
+     * tampak wajar untuk mengalirkan baris — akan memaksa urutan menurut id
+     * dan diam-diam mengacak laporan yang harus urut tanggal.
+     */
+    #[Test]
+    public function csv_tetap_urut_tanggal_dan_totalnya_benar(): void
+    {
+        $admin = User::factory()->create();
+
+        // Sengaja dibuat dengan id yang berlawanan arah dengan tanggalnya.
+        KasGereja::factory()->create(['tanggal' => '2026-03-20', 'jenis' => 'Pengeluaran', 'nominal' => 100_000, 'keterangan' => 'Belakangan']);
+        KasGereja::factory()->create(['tanggal' => '2026-03-05', 'jenis' => 'Pemasukan', 'nominal' => 500_000, 'keterangan' => 'Duluan']);
+
+        $isi = $this->actingAs($admin)
+            ->get(route('admin.kas.csv', ['dari' => '2026-03-01', 'sampai' => '2026-03-31']))
+            ->assertOk()
+            ->streamedContent();
+
+        $this->assertLessThan(strpos($isi, 'Belakangan'), strpos($isi, 'Duluan'));
+        $this->assertStringContainsString('"Total pemasukan";;;500000', $isi);
+        $this->assertStringContainsString('"Total pengeluaran";;;100000', $isi);
+        $this->assertStringContainsString('"Saldo akhir";;;400000', $isi);
+    }
 }

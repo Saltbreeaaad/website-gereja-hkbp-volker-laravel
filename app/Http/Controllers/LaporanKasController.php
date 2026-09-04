@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\KasGereja;
 use App\Models\PeriodeKas;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -21,18 +22,34 @@ class LaporanKasController extends Controller
         return view('admin.laporan-kas', $data);
     }
 
+    /**
+     * Ekspor CSV.
+     *
+     * Barisnya dialirkan, bukan dikumpulkan lebih dulu. `tampil()` boleh
+     * memuat seluruh transaksi ke memori karena tabel HTML-nya memang harus
+     * dirender sekaligus, tetapi CSV tidak: setiap baris ditulis lalu
+     * dilupakan. Laporan setahun penuh dengan ribuan transaksi karena itu
+     * tidak lagi menahan seluruh model Eloquent-nya di memori sekaligus —
+     * yang di hosting bersama berarti bedanya antara berkas terunduh dan
+     * halaman 500 tanpa penjelasan.
+     */
     public function csv(Request $request): StreamedResponse
     {
         Gate::authorize('viewAny', KasGereja::class);
-        $data = $this->data($request);
-        $nama = "laporan-kas-{$data['dari']->format('Ymd')}-{$data['sampai']->format('Ymd')}.csv";
 
-        return response()->streamDownload(function () use ($data): void {
+        [$dari, $sampai] = $this->rentang($request);
+        $data = $this->ringkasan($dari, $sampai);
+        $transaksi = $this->kueriTransaksi($dari, $sampai);
+        $nama = "laporan-kas-{$dari->format('Ymd')}-{$sampai->format('Ymd')}.csv";
+
+        return response()->streamDownload(function () use ($data, $transaksi): void {
             $output = fopen('php://output', 'wb');
             fwrite($output, "\xEF\xBB\xBF");
             fputcsv($output, ['Tanggal', 'Jenis', 'Keterangan', 'Nominal'], ';');
 
-            foreach ($data['transaksi'] as $item) {
+            // `lazy()`, bukan `lazyById()`: yang terakhir memaksa urutan
+            // menurut id dan akan mengacak laporan yang harus urut tanggal.
+            foreach ($transaksi->lazy(500) as $item) {
                 fputcsv($output, [
                     $item->tanggal->format('d/m/Y'),
                     $item->jenis,
@@ -53,26 +70,65 @@ class LaporanKasController extends Controller
     /** @return array{transaksi: Collection<int, KasGereja>, dari: CarbonImmutable, sampai: CarbonImmutable, saldoAwal: int, pemasukan: int, pengeluaran: int, saldoAkhir: int} */
     private function data(Request $request): array
     {
+        [$dari, $sampai] = $this->rentang($request);
+
+        return ['transaksi' => $this->kueriTransaksi($dari, $sampai)->get(), 'dari' => $dari, 'sampai' => $sampai]
+            + $this->ringkasan($dari, $sampai);
+    }
+
+    /**
+     * Rentang tanggal laporan, sudah dibetulkan urutannya.
+     *
+     * @return array{0: CarbonImmutable, 1: CarbonImmutable}
+     */
+    private function rentang(Request $request): array
+    {
         $dari = $this->tanggal($request->query('dari')) ?? CarbonImmutable::today()->startOfMonth();
         $sampai = $this->tanggal($request->query('sampai')) ?? $dari->endOfMonth();
 
-        if ($sampai->lt($dari)) {
-            [$dari, $sampai] = [$sampai, $dari];
-        }
+        return $sampai->lt($dari) ? [$sampai, $dari] : [$dari, $sampai];
+    }
 
-        $transaksi = KasGereja::query()
+    /** @return Builder<KasGereja> */
+    private function kueriTransaksi(CarbonImmutable $dari, CarbonImmutable $sampai): Builder
+    {
+        return KasGereja::query()
             // whereDate menjaga kompatibilitas dengan baris lama yang pernah
             // tersimpan sebagai datetime sebelum kolom dinormalalkan ke DATE.
             ->whereDate('tanggal', '>=', $dari->toDateString())
             ->whereDate('tanggal', '<=', $sampai->toDateString())
             ->orderBy('tanggal')
-            ->orderBy('id')
-            ->get();
-        $saldoAwal = $this->saldoAwal($dari);
-        $pemasukan = (int) $transaksi->where('jenis', 'Pemasukan')->sum('nominal');
-        $pengeluaran = (int) $transaksi->where('jenis', 'Pengeluaran')->sum('nominal');
+            ->orderBy('id');
+    }
 
-        return compact('transaksi', 'dari', 'sampai', 'saldoAwal', 'pemasukan', 'pengeluaran') + [
+    /**
+     * Angka ringkasan laporan.
+     *
+     * Dijumlahkan di SQL, bukan dari koleksi yang sudah dimuat: ekspor CSV
+     * mengalirkan barisnya satu per satu dan tidak pernah memegang koleksi
+     * seperti itu, sementara totalnya tetap harus ditulis di kaki berkas.
+     *
+     * @return array{saldoAwal: int, pemasukan: int, pengeluaran: int, saldoAkhir: int}
+     */
+    private function ringkasan(CarbonImmutable $dari, CarbonImmutable $sampai): array
+    {
+        $jumlah = $this->kueriTransaksi($dari, $sampai)
+            ->toBase()
+            ->reorder()
+            ->selectRaw("
+                COALESCE(SUM(CASE WHEN jenis = 'Pemasukan' THEN nominal ELSE 0 END), 0) as masuk,
+                COALESCE(SUM(CASE WHEN jenis = 'Pengeluaran' THEN nominal ELSE 0 END), 0) as keluar
+            ")
+            ->first();
+
+        $saldoAwal = $this->saldoAwal($dari);
+        $pemasukan = (int) ($jumlah->masuk ?? 0);
+        $pengeluaran = (int) ($jumlah->keluar ?? 0);
+
+        return [
+            'saldoAwal' => $saldoAwal,
+            'pemasukan' => $pemasukan,
+            'pengeluaran' => $pengeluaran,
             'saldoAkhir' => $saldoAwal + $pemasukan - $pengeluaran,
         ];
     }

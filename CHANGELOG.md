@@ -23,7 +23,35 @@ fiturnya dianggap lengkap.
 
 ## [Belum dirilis]
 
-Belum ada.
+### Ditambahkan
+
+- **Permohonan doa memberi tahu pengurus.** Pokok doa yang masuk kini mengisi
+  lonceng panel administrator dan sekretaris — sebelumnya ia hanya terbaca bila
+  seseorang kebetulan membuka menunya. Notifikasinya **tidak membawa isi doa
+  maupun nama pengirim**: halaman `/doa` menjanjikan formulir privat, dan baris
+  notifikasi adalah salinan kedua yang tidak dijaga policy mana pun.
+- **Pengingat mengabari pemohon gedung.** Begitu status permohonan diubah — dari
+  tombol Setujui/Tolak maupun dari formulir suntingnya — muncul ajakan mengirim
+  kabarnya lewat WhatsApp, lengkap dengan tombolnya. Kontak yang bukan nomor
+  telepon diberitahukan secara terpisah alih-alih dilewati diam-diam.
+
+### Diperbaiki
+
+- **Halaman luring tampil tanpa CSS.** Service worker melayani permintaan aset
+  dari cache tetapi tidak pernah menuliskan apa pun ke sana selain HTML, jadi
+  halaman yang tersimpan terbuka tanpa gaya sama sekali saat benar-benar luring.
+  Berkas gaya, skrip, font, dan gambar sesama asal kini ikut tersimpan.
+- **Nama cache service worker mengikuti nomor rilis.** Sebelumnya tetap
+  `hkbp-volker-v1` selamanya, sehingga aset lama terus dilayani setelah situs
+  naik versi. `VERSI` di `public/sw.js` harus dinaikkan bersama versi di berkas
+  ini — dijaga `tests/Feature/PwaLuringTest.php`.
+
+### Diubah
+
+- **Ekspor CSV laporan kas dialirkan, bukan dikumpulkan.** Seluruh transaksi
+  dalam rentang sebelumnya dimuat ke memori sebelum baris pertama ditulis.
+  Angka ringkasannya kini dijumlahkan di SQL dan barisnya mengalir 500 sekaligus;
+  urutan menurut tanggal tidak berubah.
 
 ## [0.9.0] — 2026-09-02
 

@@ -14,6 +14,7 @@ use App\Models\PermohonanDoa;
 use App\Models\Renungan;
 use App\Models\User;
 use App\Models\WartaJemaat;
+use App\Notifications\PermohonanDoaMasuk;
 use App\Notifications\PermohonanGedungMasuk;
 use App\Support\CacheKonten;
 use Carbon\CarbonImmutable;
@@ -157,7 +158,15 @@ class PublicController extends Controller
 
     public function storeDoa(StorePermohonanDoaRequest $request): RedirectResponse
     {
-        PermohonanDoa::query()->create($request->dataTersimpan());
+        $permohonan = PermohonanDoa::query()->create($request->dataTersimpan());
+
+        // Tanpa ini pokok doa hanya terbaca bila seseorang kebetulan membuka
+        // menu Permohonan Doa di panel. Notifikasinya tidak membawa isi doa
+        // maupun nama pengirim — lihat catatan di PermohonanDoaMasuk.
+        Notification::send(
+            User::query()->whereIn('role', [User::ADMIN, User::SEKRETARIS])->get(),
+            new PermohonanDoaMasuk($permohonan),
+        );
 
         return to_route('doa')->with('success', 'Pokok doa telah diterima secara privat. Tim pelayanan akan mendoakannya.');
     }

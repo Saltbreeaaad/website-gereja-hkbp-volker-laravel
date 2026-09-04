@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Resources\PenggunaanGerejaResource\Pages\ListPenggunaanGerejas;
 use App\Models\PenggunaanGereja;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
@@ -74,5 +76,56 @@ class AlurPermohonanLanjutanTest extends TestCase
 
         $this->assertStringStartsWith('https://wa.me/6281234567890', $permohonan->urlWhatsAppStatus());
         $this->assertStringContainsString(rawurlencode($permohonan->kode), $permohonan->urlWhatsAppStatus());
+    }
+
+    /**
+     * Keputusan pengurus tidak sampai ke pemohon dengan sendirinya.
+     *
+     * Tombol "Kirim Status" sudah ada sejak lama, tetapi ia menunggu diingat.
+     * Yang dijaga di sini: begitu status berubah, ajakan mengabarinya muncul
+     * di layar pengurus saat itu juga.
+     */
+    #[Test]
+    public function menyetujui_permohonan_mengingatkan_pengurus_mengabari_pemohon(): void
+    {
+        $admin = User::factory()->create();
+        $permohonan = PenggunaanGereja::factory()->create(['kontak' => '081234567890']);
+
+        Livewire::actingAs($admin)
+            ->test(ListPenggunaanGerejas::class)
+            ->callTableAction('setujui', $permohonan)
+            ->assertNotified('Beri tahu pemohon');
+
+        $this->assertSame(PenggunaanGereja::DISETUJUI, $permohonan->fresh()->status);
+    }
+
+    #[Test]
+    public function menolak_permohonan_juga_mengingatkan(): void
+    {
+        $admin = User::factory()->create();
+        $permohonan = PenggunaanGereja::factory()->create(['kontak' => '081234567890']);
+
+        Livewire::actingAs($admin)
+            ->test(ListPenggunaanGerejas::class)
+            ->callTableAction('tolak', $permohonan)
+            ->assertNotified('Beri tahu pemohon');
+
+        $this->assertSame(PenggunaanGereja::DITOLAK, $permohonan->fresh()->status);
+    }
+
+    /**
+     * Kontak yang bukan nomor telepon tidak boleh lewat diam-diam: pemohon itu
+     * justru yang paling mungkin tidak pernah dikabari sama sekali.
+     */
+    #[Test]
+    public function kontak_yang_tidak_dapat_di_whatsapp_diberitahukan_ke_pengurus(): void
+    {
+        $admin = User::factory()->create();
+        $permohonan = PenggunaanGereja::factory()->create(['kontak' => 'budi@example.test']);
+
+        Livewire::actingAs($admin)
+            ->test(ListPenggunaanGerejas::class)
+            ->callTableAction('setujui', $permohonan)
+            ->assertNotified('Pemohon belum dikabari');
     }
 }

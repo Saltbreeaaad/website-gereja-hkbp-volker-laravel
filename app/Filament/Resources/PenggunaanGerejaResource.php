@@ -8,6 +8,7 @@ use Closure;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
+use Filament\Notifications\Actions\Action as AksiNotifikasi;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -174,6 +175,8 @@ class PenggunaanGerejaResource extends Resource
                         $record->update(['status' => PenggunaanGereja::DISETUJUI]);
 
                         Notification::make()->title('Permohonan disetujui')->success()->send();
+
+                        static::ingatkanKabariPemohon($record);
                     }),
 
                 Tables\Actions\Action::make('tolak')
@@ -182,7 +185,11 @@ class PenggunaanGerejaResource extends Resource
                     ->color('danger')
                     ->visible(fn (PenggunaanGereja $record) => $record->status !== PenggunaanGereja::DITOLAK)
                     ->requiresConfirmation()
-                    ->action(fn (PenggunaanGereja $record) => $record->update(['status' => PenggunaanGereja::DITOLAK])),
+                    ->action(function (PenggunaanGereja $record): void {
+                        $record->update(['status' => PenggunaanGereja::DITOLAK]);
+
+                        static::ingatkanKabariPemohon($record);
+                    }),
 
                 Tables\Actions\Action::make('hubungi')
                     ->label('Kirim Status')
@@ -199,6 +206,59 @@ class PenggunaanGerejaResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    /**
+     * Ingatkan pengurus bahwa keputusannya belum sampai ke pemohon.
+     *
+     * Alur permohonan berhenti di panel: status berubah, riwayatnya tercatat,
+     * dan pemohon tidak tahu apa pun sampai ia sendiri membuka halaman lacak
+     * dengan kodenya. Tombol "Kirim Status" di tabel sudah menyiapkan pesan
+     * WhatsApp-nya, tetapi ia hanya bekerja bila pengurus INGAT mengkliknya —
+     * dan tepat setelah menekan "Setujui", perhatiannya sudah pindah ke baris
+     * berikutnya.
+     *
+     * Jadi pengingatnya dimunculkan pada saat keputusan dibuat, dengan
+     * tombolnya sekali klik di dalam notifikasi itu sendiri. `persistent()`
+     * supaya tidak hilang sendiri sebelum sempat dibaca.
+     *
+     * Bukan pengiriman otomatis: gereja ini tidak memakai gateway WhatsApp
+     * mana pun, dan nomor pemohon adalah nomor pribadi yang pesannya tetap
+     * pantas dikirim seorang pengurus, bukan sebuah sistem.
+     */
+    public static function ingatkanKabariPemohon(PenggunaanGereja $record): void
+    {
+        $url = $record->urlWhatsAppStatus();
+
+        if ($url === null) {
+            // Kontak yang diisi pemohon bukan nomor telepon yang bisa dipakai
+            // (surel, atau angka yang terlalu pendek). Diam-diam melewatinya
+            // berarti pemohon itu justru yang paling mungkin tidak pernah
+            // dikabari sama sekali.
+            Notification::make()
+                ->title('Pemohon belum dikabari')
+                ->body("Kontak {$record->kode} bukan nomor yang dapat dihubungi lewat WhatsApp: {$record->kontak}. Hubungi pemohon dengan cara lain.")
+                ->warning()
+                ->persistent()
+                ->send();
+
+            return;
+        }
+
+        Notification::make()
+            ->title('Beri tahu pemohon')
+            ->body("Status {$record->kode} kini \"{$record->status}\". Pemohon belum mengetahuinya sampai pesannya dikirim.")
+            ->icon('heroicon-o-chat-bubble-left-right')
+            ->info()
+            ->persistent()
+            ->actions([
+                AksiNotifikasi::make('hubungi')
+                    ->label('Kirim lewat WhatsApp')
+                    ->url($url, shouldOpenInNewTab: true)
+                    ->button()
+                    ->close(),
+            ])
+            ->send();
     }
 
     public static function getRelations(): array
