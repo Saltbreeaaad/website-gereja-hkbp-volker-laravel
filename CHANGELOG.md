@@ -37,6 +37,20 @@ fiturnya dianggap lengkap.
 
 ### Diubah
 
+- **Tanggal kini benar-benar tidak bisa berubah diam-diam.** Sepuluh model
+  menyatakan `@property CarbonImmutable` pada docblock-nya, dan
+  `App\Casts\JamHarian` memang mengembalikan `CarbonImmutable` -- tetapi cast
+  bawaan `date`/`datetime` mengembalikan `Illuminate\Support\Carbon` yang
+  **mutable**. Dua belas properti karena itu menjanjikan sesuatu yang tidak
+  ditepati, dan PHPStan ikut memercayainya: `$jadwal->tanggal->addDay()` yang
+  hasilnya dibuang mengubah nilainya di tempat tanpa ada yang memperingatkan.
+
+  `Date::use(CarbonImmutable::class)` di `AppServiceProvider` membuat yang
+  tertulis dan yang terjadi menjadi sama. Yang dipilih adalah menepati
+  janjinya, bukan menurunkan janjinya: maksud itu sudah tertulis sejak awal,
+  hanya belum pernah ditegakkan.
+
+
 - **Penamaan diseragamkan, dan aturannya dituliskan di `KONVENSI.md`.** Kode ini
   memuat dua konvensi sekaligus: generator Laravel/Filament menjamakkan kata
   Indonesia dengan `-s` Inggris (`kas_gerejas`, `ListGaleris`), sementara berkas

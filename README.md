@@ -146,6 +146,7 @@ bacalah sebelum menambah model, halaman panel, rute, atau perintah baru.
 | Berkas | Peran |
 |---|---|
 | `config/gereja.php` | **Satu sumber kebenaran** untuk nama, alamat, telepon, koordinat, dan menu navigasi. Ubah data gereja di sini, bukan di Blade. |
+| `app/Providers/AppServiceProvider.php` | `Date::use(CarbonImmutable::class)` membuat **seluruh** tanggal immutable — cast model, `now()`, dan `today()`. `$tanggal->addDay()` mengembalikan salinan; yang lama tidak berubah. |
 | `app/Casts/JamHarian.php` | Cast untuk kolom `time`. Menormalkan penyimpanan ke `H:i:s` dan menambatkan jam ke hari ini agar dua jam selalu bisa dibandingkan. |
 | `app/Http/Requests/StorePenggunaanGerejaRequest.php` | Validasi permohonan gedung, termasuk pemeriksaan bentrok jadwal. |
 | `resources/views/components/` | `layout`, `page-hero`, `section-heading`, `empty-state`, `field`, `kartu-pelayan`, `filter-tahun`. |
